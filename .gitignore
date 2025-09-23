@@ -1,0 +1,24 @@
+# Ignore les fichiers de configuration de Qt Creator
+*.pro.user
+*.pro.user.*
+*.qtc
+.*.swp
+*.DS_Store
+
+# Ignore les dossiers de construction
+debug/
+release/
+build-*/
+*.user
+*.user.*
+build/
+
+# Ignore les fichiers générés
+Makefile
+qrc_*.cpp
+moc_*.cpp
+ui_*.h
+
+# Felgo specific
+*.qmlc
+*.jsc
