@@ -1,5 +1,6 @@
 import Felgo
 import QtQuick
+import "pages"
 
 App {
     // You get free licenseKeys from https://felgo.com/licenseKey
@@ -11,14 +12,17 @@ App {
 
     NavigationStack {
 
-        AppPage {
+        initialPage: CataloguePage { }
+
+        /*    AppPage {
             title: qsTr("Main Page")
 
             Image {
                 source: "../assets/felgo-logo.png"
                 anchors.centerIn: parent
             }
-        }
+        }*/
+
 
     }
 }
