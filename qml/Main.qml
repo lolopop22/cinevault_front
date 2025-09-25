@@ -1,5 +1,7 @@
 import Felgo
 import QtQuick
+import "logic"
+import "model"
 import "pages"
 
 App {
