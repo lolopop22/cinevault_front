@@ -19,11 +19,11 @@ App {
 
     // Navigation principale avec Bottom Navigation
     Navigation {
-        navigationMode: navigationModeTabbed
+        navigationMode: navigationModeDefault
 
         NavigationItem {
             title: "Catalogue"
-            icon: IconType.film
+            iconType: IconType.film
 
             NavigationStack {
                 initialPage: CataloguePage {
@@ -35,7 +35,7 @@ App {
 
         NavigationItem {
             title: "Recherche"
-            icon: IconType.search
+            iconType: IconType.search
 
             NavigationStack {
                 AppPage {
@@ -50,7 +50,7 @@ App {
 
         NavigationItem {
             title: "Profil"
-            icon: IconType.user
+            iconType: IconType.user
 
             NavigationStack {
                 AppPage {
