@@ -1,5 +1,5 @@
-import Felgo
-import QtQuick
+import Felgo 4.0
+import QtQuick 2.15
 import "logic"
 import "model"
 import "pages"
@@ -12,19 +12,61 @@ App {
     //  * Add plugins to monetize, analyze & improve your apps (available with the Pro Licenses)
     //licenseKey: "<generate one from https://felgo.com/licenseKey>"
 
-    NavigationStack {
+    // Modèle de données global
+    FilmDataModel {
+        id: filmDataModel
+    }
 
-        initialPage: CataloguePage { }
+    // Navigation principale avec Bottom Navigation
+    Navigation {
+        navigationMode: navigationModeTabbed
 
-        /*    AppPage {
-            title: qsTr("Main Page")
+        NavigationItem {
+            title: "Catalogue"
+            icon: IconType.film
 
-            Image {
-                source: "../assets/felgo-logo.png"
-                anchors.centerIn: parent
+            NavigationStack {
+                initialPage: CataloguePage {
+                    // Passage des références globales
+                    filmDataModel: filmDataModel
+                }
             }
-        }*/
+        }
 
+        NavigationItem {
+            title: "Recherche"
+            icon: IconType.search
 
+            NavigationStack {
+                AppPage {
+                    title: "Recherche"
+                    AppText {
+                        anchors.centerIn: parent
+                        text: "Page Recherche - À implémenter"
+                    }
+                }
+            }
+        }
+
+        NavigationItem {
+            title: "Profil"
+            icon: IconType.user
+
+            NavigationStack {
+                AppPage {
+                    title: "Profil"
+                    AppText {
+                        anchors.centerIn: parent
+                        text: "Page Profil - À implémenter"
+                    }
+                }
+            }
+        }
+    }
+
+    // Initialisation de l'application
+    Component.onCompleted: {
+        console.log("Film Catalogue App initialisée")
+        // Chargement initial des données (sera implémenté plus tard)
     }
 }

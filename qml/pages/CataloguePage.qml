@@ -5,73 +5,72 @@ import "../model" as Model
 
 AppPage {
     id: cataloguePage
-    title: "Catalogue"
+    title: "Mon Catalogue"
 
-    Rectangle {
-        width: parent.width
-        height: parent.height
-        // color: "red"
+    // Références aux composants globaux
+    property var filmDataModel
 
-        GridView {
-            id: filmGridView
+    // AppFlickable est utilisé ici pour permettre le défilement
+    AppFlickable {
+        id: flickable
+        // width: parent.width
+        // height: parent.height
+        anchors.fill: parent
+
+        // Définit la taille du contenu visible; le défilement assure que tout est consultable
+        // contentHeight: dp(350) // Ajustez cette valeur pour s'adapter à votre contenu
+        contentHeight: content.height
+        contentWidth: parent.width
+
+        Component.onCompleted: console.log("AppFlickable Loaded")
+
+        Column {
+            id: content
             width: parent.width
-            height: parent.height
+            spacing: dp(16)
 
-            cellWidth: parent.width / 3 // Ajustement pour avoir 3 colonnes
-            cellHeight: 280
-            anchors.top: parent.top
-            anchors.margins: 0 // Espacement des bords supérieur et inférieur
-            anchors.topMargin: 10
+            Component.onCompleted: console.log("Column Loaded")
 
-            model: Model.FilmDataModel {}
+            Item {
+                width: parent.width
+                height: dp(60)
 
-            clip: true // Pour s'assurer que les éléments ne débordent pas
-
-            delegate: Item {
-                width: filmGridView.cellWidth
-                height: filmGridView.cellHeight
-
-                Column {
-                    spacing: 6 // espacement vertical interne entre les éléments
-                    anchors.fill: parent // S'assure que la colonne utilise tout l'espace
-
-                    // Image {
-                    //     source: model.posterUrl
-                    //     width: parent.width
-                    //     height: parent.height * 0.8 // 80% de l'élément pour l'affiche
-                    //     fillMode: Image.PreserveAspectFit
-                    //     horizontalAlignment: Image.AlignHCenter
-                    // }
-
-
-                    Rectangle {
-                        width: parent.width * 0.9 // Utilisation partielle de l'espace horizontal
-                        height: parent.height * 0.86
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        color: model.color
-
-                        // Debug : Vérifier que chaque élément Coloré s'initialise
-                        Component.onCompleted: console.log("Rectangle Color Loaded: " + model.color)
-
-                    }
-
-                    Text {
-                        text: model.title
-                        width: parent.width * 0.9 // Ajustement proportionnel à l'élément
-                        // width: parent.width - 20
-                        horizontalAlignment: Text.AlignHCenter
-                        wrapMode: Text.WordWrap
-                        font.bold: true
-                        // color: "white"
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        anchors.topMargin: 0
-
-                        // Debug : Vérifier que chaque titre est assigné
-                        Component.onCompleted: console.log("Title Loaded: " + model.title)
-                    }
+                AppText {
+                    anchors.centerIn: parent
+                    text: "Catalogue de Films"
+                    font.pixelSize: sp(24)
+                    color: Theme.colors.textColor
                 }
             }
+
+            AppText {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: filmDataModel ?
+                      "Films disponibles : " + (filmDataModel.films ? filmDataModel.films.length : 0) :
+                      "Chargement du modèle..."
+                font.pixelSize: sp(18)
+                color: Theme.colors.secondaryTextColor
+            }
+
+            // Placeholder pour la future liste de films
+            Rectangle {
+                width: parent.width - dp(32)
+                height: dp(200)
+                anchors.horizontalCenter: parent.horizontalCenter
+                color: Theme.colors.backgroundColor
+                border.color: Theme.colors.dividerColor
+                border.width: dp(1)
+                radius: dp(8)
+
+                AppText {
+                    anchors.centerIn: parent
+                    text: "Zone d'affichage des films\n(Spécification 2)"
+                    horizontalAlignment: Text.AlignHCenter
+                    color: Theme.colors.disabledColor
+                }
+            }
+
         }
     }
-}
 
+}

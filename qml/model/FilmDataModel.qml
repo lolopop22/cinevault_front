@@ -1,26 +1,61 @@
 import Felgo 4.0
 import QtQuick 2.15
 
-ListModel {
+
+Item {
     id: filmDataModel
-    ListElement { color: "red"; title: "Film Rouge" }
-    ListElement { color: "blue"; title: "Film Bleu" }
-    ListElement { color: "green"; title: "Film Vert" }
-    ListElement { color: "yellow"; title: "Film Jaune" }
-    ListElement { color: "purple"; title: "Film Violet" }
-    ListElement { color: "green"; title: "Film Vert" }
-    ListElement { color: "yellow"; title: "Film Jaune" }
-    ListElement { color: "purple"; title: "Film Violet" }
-    ListElement { color: "green"; title: "Film Vert" }
-    ListElement { color: "yellow"; title: "Film Jaune" }
-    ListElement { color: "purple"; title: "Film Violet" }
-    ListElement { color: "green"; title: "Film Vert" }
-    ListElement { color: "yellow"; title: "Film Jaune" }
-    ListElement { color: "purple"; title: "Film Violet" }
+
+    QtObject {
+        id: internal
+
+        property var films: [
+            {
+                id: 1,
+                title: "Film Rouge",
+                poster_url: "red"
+            },
+            {
+                id: 2,
+                title: "Film Bleu",
+                poster_url: "blue"
+            },
+            {
+                id: 3,
+                title: "Film Jaune",
+                poster_url: "yellow"
+            },
+            {
+                id: 4,
+                title: "Film Rouge",
+                poster_url: "red"
+            },
+            {
+                id: 5,
+                title: "Film Bleu",
+                poster_url: "blue"
+            },
+            {
+                id: 6,
+                title: "Film Jaune",
+                poster_url: "yellow"
+            },
+            {
+                id: 7,
+                title: "Film Rouge",
+                poster_url: "red"
+            },
+            {
+                id: 8,
+                title: "Film Bleu",
+                poster_url: "blue"
+            },
+            {
+                id: 9,
+                title: "Film Jaune",
+                poster_url: "yellow"
+            },
+
+
+        ]
+    }
 }
-
-
-/*
-ListElement { title: "Film 1"; posterUrl: "https://example.com/image1.jpg"; category: "Action" }
-ListElement { title: "Film 2"; posterUrl: "https://example.com/image2.jpg"; category: "Drama" }
-*/
