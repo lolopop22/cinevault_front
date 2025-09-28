@@ -5,6 +5,8 @@ import "model"
 import "pages"
 
 App {
+    id: app
+
     // You get free licenseKeys from https://felgo.com/licenseKey
     // With a licenseKey you can:
     //  * Publish your games & apps for the app stores
@@ -12,9 +14,14 @@ App {
     //  * Add plugins to monetize, analyze & improve your apps (available with the Pro Licenses)
     //licenseKey: "<generate one from https://felgo.com/licenseKey>"
 
-    // Modèle de données global
+    // Modèle de données initialisé EN PREMIER
     FilmDataModel {
         id: filmDataModel
+        Component.onCompleted: {
+            console.log("=== DEBUG App - FilmDataModel ===")
+            console.log("FilmDataModel initialisé avec", films.length, "films")
+            console.log(" ")
+        }
     }
 
     // Navigation principale avec Bottom Navigation
@@ -26,10 +33,18 @@ App {
             iconType: IconType.film
 
             NavigationStack {
-                initialPage: CataloguePage {
-                    // Passage des références globales
-                    filmDataModel: filmDataModel
+                // Attendre que le modèle soit prêt avant de créer la page
+                initialPage: Component {
+                    CataloguePage {
+                        filmDataModel: filmDataModel
+                        // data: "Bonjour"
+                    }
                 }
+            }
+
+            Component.onCompleted: {
+                console.log("=== DEBUG App - NavigationItem - Catalogue ===")
+                console.log(" ")
             }
         }
 
@@ -46,6 +61,11 @@ App {
                     }
                 }
             }
+
+            Component.onCompleted: {
+                console.log("=== DEBUG App - NavigationItem - Recherche ===")
+                console.log(" ")
+            }
         }
 
         NavigationItem {
@@ -61,12 +81,22 @@ App {
                     }
                 }
             }
+
+            Component.onCompleted: {
+                console.log("=== DEBUG App - NavigationItem - Profil ===")
+                console.log(" ")
+            }
         }
     }
 
     // Initialisation de l'application
     Component.onCompleted: {
-        console.log("Film Catalogue App initialisée")
+        console.log("App initialisée")
+        // Le modèle est maintenant sûrement prêt
+        console.log("Films disponibles:", filmDataModel.films.length)
+        console.log(" ")
+
         // Chargement initial des données (sera implémenté plus tard)
     }
+
 }
