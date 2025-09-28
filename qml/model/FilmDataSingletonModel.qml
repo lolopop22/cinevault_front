@@ -1,8 +1,11 @@
+pragma Singleton
 import Felgo 4.0
 import QtQuick 2.15
 
 Item {
-    id: filmDataModel
+    // Utilisation du Singleton Pattern
+
+    id: filmDataSingletonModel
     readonly property alias films: internal.films
 
     Item {
@@ -27,6 +30,7 @@ Item {
 
     Component.onCompleted: {
         console.log("=== DEBUG FilmDataModel ===")
+        console.log("FilmDataSingleton initialisé avec", films.length, "films")
         console.log(" ")
     }
 }

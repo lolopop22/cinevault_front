@@ -1,27 +1,30 @@
 import Felgo 4.0
 import QtQuick 2.15
+import "../model"
 
 AppPage {
     id: cataloguePage
     title: "Mon Catalogue"
 
-    property var filmDataModel: null
+    // plus besoin de passer par ceci pour le moment dorénavant car le modèle sera accessible
+    // via import. On utilise dorénavant le pattern Singleton
+    // property var filmDataModel: null
 
     AppText {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.margins: dp(20)
-        text: "Debug: " + (filmDataModel ? "Model OK" : "Model NULL")
+        text: "Debug: " + (FilmDataSingletonModel ? "Model OK" : "Model NULL")
         // text: filmDataModel
         font.pixelSize: sp(16)
 
         Component.onCompleted: {
             console.log("=== DEBUG CataloguePage - AppText ===")
-            console.log("filmDataModel:", filmDataModel)
-            if (filmDataModel) {
-                console.log("filmDataModel.films:", filmDataModel.films)
-                if (filmDataModel.films) {
-                    console.log("films.length:", filmDataModel.films.length)
+            console.log("filmDataModel:", FilmDataSingletonModel)
+            if (FilmDataSingletonModel) {
+                console.log("FilmDataSingleton.films:", FilmDataSingletonModel.films)
+                if (FilmDataSingletonModel.films) {
+                    console.log("films.length:", FilmDataSingletonModel.films.length)
                 }
             }
             console.log(" ")
@@ -36,7 +39,7 @@ AppPage {
         cellWidth: dp(120)
         cellHeight: dp(60)
 
-        model: filmDataModel && filmDataModel.films ? filmDataModel.films : []
+        model: FilmDataSingletonModel && FilmDataSingletonModel.films ? FilmDataSingletonModel.films : []
 
         delegate: Rectangle {
             width: dp(110)
@@ -53,11 +56,11 @@ AppPage {
 
         Component.onCompleted: {
             console.log("=== DEBUG CataloguePage - GridView ===")
-            console.log("filmDataModel:", filmDataModel)
-            if (filmDataModel) {
-                console.log("filmDataModel.films:", filmDataModel.films)
-                if (filmDataModel.films) {
-                    console.log("films.length:", filmDataModel.films.length)
+            console.log("FilmDataSingleton:", FilmDataSingletonModel)
+            if (FilmDataSingletonModel) {
+                console.log("filmDataModel.films:", FilmDataSingletonModel.films)
+                if (FilmDataSingletonModel.films) {
+                    console.log("films.length:", FilmDataSingletonModel.films.length)
                 }
             }
             console.log(" ")
@@ -66,11 +69,11 @@ AppPage {
 
     Component.onCompleted: {
         console.log("=== DEBUG CataloguePage ===")
-        console.log("filmDataModel:", filmDataModel)
-        if (filmDataModel) {
-            console.log("filmDataModel.films:", filmDataModel.films)
-            if (filmDataModel.films) {
-                console.log("films.length:", filmDataModel.films.length)
+        console.log("filmDataModel:", FilmDataSingletonModel)
+        if (FilmDataSingletonModel) {
+            console.log("filmDataModel.films:", FilmDataSingletonModel.films)
+            if (FilmDataSingletonModel.films) {
+                console.log("films.length:", FilmDataSingletonModel.films.length)
             }
         }
         console.log(" ")
