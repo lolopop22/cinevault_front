@@ -15,6 +15,10 @@ AppPage {
     readonly property real maxItemWidth: dp(150)   // Limité pour éviter des cartes trop grandes
     readonly property real itemSpacing: dp(8)      // Espacement plus serré
 
+    // Ajout du ratio d'affiche cinéma
+    readonly property real posterAspectRatio: 1.5  // Hauteur = largeur * 1.5 (ratio 2:3)
+    readonly property real titleHeight: dp(35)     // Espace réservé pour le titre
+
     // Calcul dynamique du nombre de colonnes (vise 3 colonnes comme le modèle)
     readonly property int columns: {
         var availableWidth = width - dp(32) // Marges gauche/droite
@@ -29,6 +33,9 @@ AppPage {
         var availableWidth = width - dp(32) - ((columns - 1) * itemSpacing)
         return Math.min(maxItemWidth, availableWidth / columns)
     }
+
+    // Calcul de la hauteur des cellules basée sur le ratio
+    readonly property real cellHeight: (cellWidth * posterAspectRatio) + titleHeight
 
     // En-tête simple et épuré
     Rectangle {
@@ -72,29 +79,49 @@ AppPage {
 
         // Utilisation des propriétés calculées
         cellWidth: cataloguePage.cellWidth + itemSpacing
-        cellHeight: dp(80) + itemSpacing // Temporaire, sera ajusté au ratio cinéma
+        cellHeight: cataloguePage.cellHeight + itemSpacing  // Utilise le nouveau calcul
 
         model: FilmDataSingletonModel && FilmDataSingletonModel.films ? FilmDataSingletonModel.films : []
 
         delegate: Rectangle {
             width: cataloguePage.cellWidth  // Largeur dynamique
-            height: dp(70)
+            height: cataloguePage.cellHeight - dp(4) // Petite marge interne
             radius: dp(4)
-            color: {
-                // Couleurs basées sur l'index pour variation visuelle
-                var colors = ["#e3f2fd", "#f3e5f5", "#e8f5e8", "#fff3e0", "#fce4ec"]
-                return colors[index % colors.length]
-            }
-            // border.color: ThemeColors.dividerColor
+            color: Theme.colors.backgroundColor
+            border.color: Theme.colors.dividerColor
             border.width: dp(0.5)
 
+
+            // Zone affiche (proportionnelle)
+            Rectangle {
+                width: parent.width
+                height: parent.width * posterAspectRatio // Respect du ratio cinéma
+                radius: dp(4)
+                color: {
+                    var colors = ["#e3f2fd", "#f3e5f5", "#e8f5e8", "#fff3e0", "#fce4ec"]
+                    return colors[index % colors.length]
+                }
+
+                AppText {
+                    anchors.centerIn: parent
+                    text: "🎬"
+                    font.pixelSize: sp(24)
+                }
+            }
+
+            // Zone titre (fixe)
             AppText {
-                anchors.centerIn: parent
+                width: parent.width
+                height: titleHeight - dp(8)
                 text: modelData ? modelData.title : "?"
-                font.pixelSize: sp(10)
+                font.pixelSize: sp(9)
+                font.bold: true
                 color: Theme.colors.textColor
                 horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
                 wrapMode: Text.WordWrap
+                maximumLineCount: 2
+                elide: Text.ElideRight
             }
         }
 
