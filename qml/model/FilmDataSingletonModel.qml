@@ -11,26 +11,29 @@ Item {
     Item {
         id: internal
         property var films: [
-            { id: 1, title: "Film Rouge", poster_url: "red" },
-            { id: 2, title: "Film Bleu", poster_url: "blue" },
-            { id: 3, title: "Film Jaune", poster_url: "yellow" },
-            { id: 4, title: "Film Rouge", poster_url: "red" },
-            { id: 5, title: "Film Bleu", poster_url: "blue" },
-            { id: 6, title: "Film Jaune", poster_url: "yellow" },
-            { id: 7, title: "Film Rouge", poster_url: "red" },
-            { id: 8, title: "Film Bleu", poster_url: "blue" },
-            { id: 9, title: "Film Jaune", poster_url: "yellow" }
+            { id: 1, title: "Avatar", poster_url: "blue" },
+            { id: 2, title: "Avengers: Endgame", poster_url: "red" },
+            { id: 3, title: "Spider-Man: No Way Home eredzadazdazdazcazcdvdce", poster_url: "yellow" },
+            { id: 4, title: "Black Panther", poster_url: "blue" },
+            { id: 5, title: "Inception", poster_url: "red" },
+            { id: 6, title: "The Dark Knight", poster_url: "yellow" },
+            { id: 7, title: "Interstellar", poster_url: "blue" },
+            { id: 8, title: "Joker", poster_url: "red" },
+            { id: 9, title: "Pulp Fiction", poster_url: "yellow" },
+            { id: 10, title: "The Matrix", poster_url: "blue" },
+            { id: 11, title: "Forrest Gump", poster_url: "red" },
+            { id: 12, title: "Gladiator", poster_url: "yellow" }
         ]
 
         Component.onCompleted: {
-            console.log("=== DEBUG FilmDataModel - internal ===")
-            console.log(" ")
+            console.log("=== FilmDataSingletonModel avec vrais titres ===")
+            console.log("Films initialisés:", films.length, "films")
         }
     }
 
     Component.onCompleted: {
         console.log("=== DEBUG FilmDataModel ===")
-        console.log("FilmDataSingleton initialisé avec", films.length, "films")
+        console.log("FilmDataSingleton initialisé avec", films.length, "films populaires")
         console.log(" ")
     }
 }
