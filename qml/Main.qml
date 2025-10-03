@@ -5,17 +5,7 @@ import "model"
 import "pages"
 
 App {
-    // You get free licenseKeys from https://felgo.com/licenseKey
-    // With a licenseKey you can:
-    //  * Publish your games & apps for the app stores
-    //  * Remove the Felgo Splash Screen or set a custom one (available with the Pro Licenses)
-    //  * Add plugins to monetize, analyze & improve your apps (available with the Pro Licenses)
-    //licenseKey: "<generate one from https://felgo.com/licenseKey>"
-
-    // Modèle de données global
-    FilmDataModel {
-        id: filmDataModel
-    }
+    id: app
 
     // Navigation principale avec Bottom Navigation
     Navigation {
@@ -26,12 +16,20 @@ App {
             iconType: IconType.film
 
             NavigationStack {
-                initialPage: CataloguePage {
-                    // Passage des références globales
-                    filmDataModel: filmDataModel
+                // Attendre que le modèle soit prêt avant de créer la page
+                initialPage: Component {
+                    CataloguePage {
+                        /* Plus besoin de passer le modèle, il sera accessible via import car on passe maintenant par le pattern Singleton */
+                    }
                 }
             }
+
+            Component.onCompleted: {
+                console.log("=== DEBUG App - NavigationItem - Catalogue ===")
+                console.log(" ")
+            }
         }
+
 
         NavigationItem {
             title: "Recherche"
@@ -45,6 +43,11 @@ App {
                         text: "Page Recherche - À implémenter"
                     }
                 }
+            }
+
+            Component.onCompleted: {
+                console.log("=== DEBUG App - NavigationItem - Recherche ===")
+                console.log(" ")
             }
         }
 
@@ -61,12 +64,21 @@ App {
                     }
                 }
             }
+
+            Component.onCompleted: {
+                console.log("=== DEBUG App - NavigationItem - Profil ===")
+                console.log(" ")
+            }
         }
     }
 
     // Initialisation de l'application
     Component.onCompleted: {
-        console.log("Film Catalogue App initialisée")
+        console.log("App initialisée")
+        // Le modèle est maintenant sûrement prêt
+        console.log("Films disponibles:", FilmDataSingletonModel.films.length)
+        console.log(" ")
+
         // Chargement initial des données (sera implémenté plus tard)
     }
 }
