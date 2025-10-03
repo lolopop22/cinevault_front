@@ -7,23 +7,6 @@ import "pages"
 App {
     id: app
 
-    // You get free licenseKeys from https://felgo.com/licenseKey
-    // With a licenseKey you can:
-    //  * Publish your games & apps for the app stores
-    //  * Remove the Felgo Splash Screen or set a custom one (available with the Pro Licenses)
-    //  * Add plugins to monetize, analyze & improve your apps (available with the Pro Licenses)
-    //licenseKey: "<generate one from https://felgo.com/licenseKey>"
-
-    // Modèle de données initialisé EN PREMIER
-    // FilmDataModel {
-    //     id: filmDataModel
-    //     Component.onCompleted: {
-    //         console.log("=== DEBUG App - FilmDataModel ===")
-    //         console.log("FilmDataModel initialisé avec", films.length, "films")
-    //         console.log(" ")
-    //     }
-    // }
-
     // Navigation principale avec Bottom Navigation
     Navigation {
         navigationMode: navigationModeDefault
@@ -37,15 +20,6 @@ App {
                 initialPage: Component {
                     CataloguePage {
                         /* Plus besoin de passer le modèle, il sera accessible via import car on passe maintenant par le pattern Singleton */
-
-                        // filmDataModel: filmDataModel
-                        // // data: "Bonjour"
-
-                        // Component.onCompleted: {
-                        //     console.log("=== DEBUG App - Catalogue - NavigationStack - initialPage - CataloguePage  ===")
-                        //     console.log("Films disponibles:", filmDataModel.films.length)
-                        //     console.log("")
-                        // }
                     }
                 }
             }
@@ -107,5 +81,4 @@ App {
 
         // Chargement initial des données (sera implémenté plus tard)
     }
-
 }

@@ -13,7 +13,7 @@ Item {
         property var films: [
             { id: 1, title: "Avatar", poster_url: "blue" },
             { id: 2, title: "Avengers: Endgame", poster_url: "red" },
-            { id: 3, title: "Spider-Man: No Way Home eredzadazdazdazcazcdvdce", poster_url: "yellow" },
+            { id: 3, title: "Spider-Man: No Way Home", poster_url: "yellow" },
             { id: 4, title: "Black Panther", poster_url: "blue" },
             { id: 5, title: "Inception", poster_url: "red" },
             { id: 6, title: "The Dark Knight", poster_url: "yellow" },
@@ -24,11 +24,6 @@ Item {
             { id: 11, title: "Forrest Gump", poster_url: "red" },
             { id: 12, title: "Gladiator", poster_url: "yellow" }
         ]
-
-        Component.onCompleted: {
-            console.log("=== FilmDataSingletonModel avec vrais titres ===")
-            console.log("Films initialisés:", films.length, "films")
-        }
     }
 
     Component.onCompleted: {
