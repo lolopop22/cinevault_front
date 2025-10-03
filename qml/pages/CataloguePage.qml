@@ -8,7 +8,7 @@ AppPage {
     title: "Mon Catalogue"
 
     // Taille fixe des cartes (ne changent plus avec la fenêtre)
-    readonly property real fixedCardWidth: dp(80)    // Largeur fixe des cartes
+    readonly property real fixedCardWidth: dp(100)    // Largeur fixe des cartes
     readonly property real itemSpacing: dp(0)         // Espacement fixe
 
     // Ajout du ratio d'affiche cinéma
@@ -80,11 +80,8 @@ AppPage {
         height: parent.height - fixedHeader.height - dp(32)
 
         // CellWidth/Height fixes + espacement géré dans les cellules
-        cellWidth: fixedCardWidth + itemSpacing
-        cellHeight: cataloguePage.cellHeight + itemSpacing
-
-        // horizontalSpacing: itemSpacing
-        // verticalSpacing: itemSpacing
+        cellWidth: fixedCardWidth
+        cellHeight: cataloguePage.cellHeight
 
         clip: true
 
@@ -102,11 +99,7 @@ AppPage {
             border.color: Theme.colors.dividerColor
             border.width: dp(0.5)
 
-            // Centrage du delegate dans sa cellule
-            // anchors.margins: itemSpacing / 2  // Pour répartir l’espacement autour de chaque cellule
-            // anchors.centerIn: parent
-
-            property real padding: dp(4)
+            property real padding: dp(3)
             Column {
                 anchors.fill: parent
                 anchors.margins: parent.padding
