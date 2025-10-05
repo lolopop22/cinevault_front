@@ -1,7 +1,8 @@
 import Felgo 4.0
 import QtQuick 2.15
 import Qt5Compat.GraphicalEffects
-import "../model"
+import "../logic" as Logic
+import "../model" as Model
 
 AppPage {
     id: cataloguePage
@@ -31,6 +32,15 @@ AppPage {
 
     readonly property real gridTotalWidth: (fixedCardWidth * columns) + (itemSpacing * (columns - 1))
     readonly property real cellHeight: (fixedCardWidth * posterAspectRatio) + titleHeight
+
+    Logic.CatalogueLogic{
+        id: logic
+    }
+
+    // // === LOGIQUE INTÉGRÉE ===
+    // Logic.CatalogueLogic {
+    //     id: logic
+    // }
 
 
     // Header fixe au-dessus de tout
@@ -89,7 +99,7 @@ AppPage {
         // cacheBuffer: cellHeight * 2
         // reuseItems: true
 
-        model: FilmDataSingletonModel && FilmDataSingletonModel.films ? FilmDataSingletonModel.films : []
+        model: Model.FilmDataSingletonModel && Model.FilmDataSingletonModel.films ? Model.FilmDataSingletonModel.films : []
 
         delegate: Rectangle {
             width: fixedCardWidth  // Largeur dynamique
@@ -147,11 +157,11 @@ AppPage {
         console.log("Largeur grille totale:", gridTotalWidth)
         console.log("Largeur écran:", width)
         console.log("Espace restant:", (width - gridTotalWidth - dp(32)))
-        console.log("filmDataModel:", FilmDataSingletonModel)
-        if (FilmDataSingletonModel) {
-            console.log("filmDataModel.films:", FilmDataSingletonModel.films)
-            if (FilmDataSingletonModel.films) {
-                console.log("films.length:", FilmDataSingletonModel.films.length)
+        console.log("filmDataModel:", Model.FilmDataSingletonModel)
+        if (Model.FilmDataSingletonModel) {
+            console.log("filmDataModel.films:", Model.FilmDataSingletonModel.films)
+            if (Model.FilmDataSingletonModel.films) {
+                console.log("films.length:", Model.FilmDataSingletonModel.films.length)
             }
         }
     }

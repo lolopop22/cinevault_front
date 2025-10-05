@@ -1,10 +1,9 @@
 import QtQuick 2.15
 import Felgo 4.0
-import "../model/FilmService.qml" as Service
-import "../model/FilmDataSingletonModel.qml" as Model
+import "../model" as Model
 
 Item {
-    id: catalog_logic
+    id: catalogueLogic
 
     // Indicateur d’état de chargement
     property bool loading: false
@@ -13,7 +12,7 @@ Item {
     signal errorOccurred(string message)
 
     // Instance du service HTTP
-    Service {
+    Model.FilmService {
         id: filmService
     }
 

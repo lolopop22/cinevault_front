@@ -8,7 +8,7 @@ Item {
     id: filmDataSingletonModel
     readonly property alias films: internal.films
 
-    Item {
+    QtObject {
         id: internal
         property var films: [
             { id: 1, title: "Avatar", poster_url: "blue" },
