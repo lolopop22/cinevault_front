@@ -9,28 +9,28 @@ QtObject {
     signal filmsFetched(var films)
     signal fetchError(string errorMessage)
 
+    // Propriété (paramétrable)
+    property string apiUrl: "https://localhost:8000/api"
+
     /**
      * Récupère la liste de tous les films depuis l’API REST.
      * Émet filmsFetched(JSON) ou fetchError(message).
      */
     function fetchAllFilms() {
-        var request = new HttpRequest();
-        request.url = "https://localhost:8000/api/movies/";
-        request.method = "GET";
-        request.send();
-        request.onCompleted.connect(function(response) {
-            if (request.status === 200) {
-                try {
-                    filmsFetched(JSON.parse(response));
-                } catch(e) {
-                    fetchError("Réponse JSON invalide");
-                }
-            } else {
-                fetchError("Erreur HTTP : " + request.status);
+        let url = apiUrl + "/movies/";
+        HttpRequest.get(url)
+        .then(function(res) {
+            try {
+                filmsFetched(JSON.parse(response));
+            } catch(e) {
+                // Gestion JSON invalide
+                fetchError("Réponse JSON invalide");
+                console.warn("Erreur de parsing JSON:", e)
             }
-        });
-        request.onError.connect(function() {
-            fetchError("Échec de connexion au serveur");
-        });
+        })
+        .catch(function(error) {
+            fetchError("Erreur HTTP et/ou Échec de connexion au serveur : " + error);
+            console.error("Erreur récupération films:", error)
+        })
     }
 }
