@@ -1,5 +1,6 @@
 import Felgo 4.0
 import QtQuick 2.15
+import QtQuick.Controls 2.15
 import Qt5Compat.GraphicalEffects
 import "../logic" as Logic
 import "../model" as Model
@@ -33,15 +34,11 @@ AppPage {
     readonly property real gridTotalWidth: (fixedCardWidth * columns) + (itemSpacing * (columns - 1))
     readonly property real cellHeight: (fixedCardWidth * posterAspectRatio) + titleHeight
 
+
+    // === LOGIQUE INTÉGRÉE ===
     Logic.CatalogueLogic{
         id: logic
     }
-
-    // // === LOGIQUE INTÉGRÉE ===
-    // Logic.CatalogueLogic {
-    //     id: logic
-    // }
-
 
     // Header fixe au-dessus de tout
     Rectangle {
@@ -77,7 +74,7 @@ AppPage {
         }
     }
 
-        // GridView avec margin top pour éviter le header
+    // GridView avec margin top pour éviter le header
     GridView {
         id: filmGridView
 
@@ -89,15 +86,19 @@ AppPage {
         width: gridTotalWidth
         height: parent.height - fixedHeader.height - dp(32)
 
-        // CellWidth/Height fixes + espacement géré dans les cellules
+        // CellWidth/Height fixes
         cellWidth: fixedCardWidth
         cellHeight: cataloguePage.cellHeight
 
-        clip: true
+        clip: false
 
         // A décommenter lorsqu'on aura de gros volume de films à afficher
         // cacheBuffer: cellHeight * 2
         // reuseItems: true
+
+        // Visibilité conditionnelle selon l'état de chargement
+        visible: !logic.loading && !errorOverlay.visible
+        opacity: logic.loading ? 0.3 : 1.0
 
         model: Model.FilmDataSingletonModel && Model.FilmDataSingletonModel.films ? Model.FilmDataSingletonModel.films : []
 
@@ -147,6 +148,78 @@ AppPage {
                     elide: Text.ElideRight
                 }
             }
+        }
+    }
+
+    // === OVERLAY MODAL POUR LOADING ===
+    Rectangle {
+        id: loadingOverlay
+        anchors.fill: parent
+        color: Qt.rgba(0, 0, 0, 0.4)
+        visible: logic.loading
+        z: 200
+        AppModal{
+
+        }
+
+        BusyIndicator {
+            anchors.centerIn: loadingOverlay
+            running: logic.loading
+            width: dp(60)
+            height: dp(60)
+        }
+
+        AppText {
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: parent.verticalCenter
+            anchors.topMargin: dp(50)
+            text: "Chargement des films..."
+            color: "white"
+            font.pixelSize: sp(14)
+        }
+    }
+
+    // === OVERLAY MODAL POUR ERREURS ===
+    Rectangle {
+        id: errorOverlay
+        anchors.fill: parent
+        color: Qt.rgba(0, 0, 0, 0.6)
+        visible: false
+        z: 200
+
+        Column {
+            anchors.centerIn: parent
+            spacing: dp(20)
+
+            AppText {
+                id: errorText
+                text: ""
+                color: "white"
+                font.pixelSize: sp(10)
+                horizontalAlignment: Text.AlignHCenter
+                anchors.horizontalCenter: parent.horizontalCenter
+                wrapMode: Text.WordWrap
+                maximumLineCount: 2
+                elide: Text.ElideRight
+            }
+
+            AppButton {
+                text: "Réessayer"
+                anchors.horizontalCenter: parent.horizontalCenter
+                onClicked: {
+                    errorOverlay.visible = false
+                    logic.refreshCatalogue()
+                }
+            }
+        }
+    }
+
+    // === GESTION DES SIGNAUX ===
+    Connections {
+        target: logic
+        function onErrorOccurred(message) {
+            errorText.text = message
+            errorOverlay.visible = true
         }
     }
 
