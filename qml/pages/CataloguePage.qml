@@ -74,6 +74,28 @@ AppPage {
         }
     }
 
+    // === INDICATEUR DE CHARGEMENT ===
+    Column {
+        anchors.centerIn: parent
+        spacing: dp(10)
+        visible: logic.loading  // ← Visible seulement pendant le chargement
+
+        BusyIndicator {
+            anchors.horizontalCenter: parent.horizontalCenter
+            running: logic.loading
+            width: dp(60)
+            height: dp(60)
+        }
+
+        AppText {
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: "Chargement du catalogue..."
+            font.pixelSize: sp(14)
+            color: Theme.colors.secondaryTextColor
+        }
+    }
+
+    // === GRILLE DE FILMS ===
     // GridView avec margin top pour éviter le header
     GridView {
         id: filmGridView
@@ -96,9 +118,11 @@ AppPage {
         // cacheBuffer: cellHeight * 2
         // reuseItems: true
 
-        // Visibilité conditionnelle selon l'état de chargement
-        visible: !logic.loading && !errorOverlay.visible
-        opacity: logic.loading ? 0.3 : 1.0
+        // ← CONDITION : visible seulement si pas en chargement ET qu'il y a des films
+        visible: !logic.loading && Model.FilmDataSingletonModel.films.length > 0
+
+        // Opacité réduite pendant le chargement, mais visible
+        // opacity: logic.loading ? 0.5 : 1.0
 
         model: Model.FilmDataSingletonModel && Model.FilmDataSingletonModel.films ? Model.FilmDataSingletonModel.films : []
 
@@ -151,67 +175,137 @@ AppPage {
         }
     }
 
-    // === OVERLAY MODAL POUR LOADING ===
-    Rectangle {
-        id: loadingOverlay
-        anchors.fill: parent
-        color: Qt.rgba(0, 0, 0, 0.4)
-        visible: logic.loading
-        z: 200
-        AppModal{
+    // === MODAL D'ERREUR EN BAS DE FENÊTRE ===
+    AppModal {
+        id: errorModal
 
-        }
+        // Configuration modal partiel en bas
+        fullscreen: false
+        modalHeight: dp(200)
 
-        BusyIndicator {
-            anchors.centerIn: loadingOverlay
-            running: logic.loading
-            width: dp(60)
-            height: dp(60)
-        }
+        // Positionnement en bas (via ancrage du contenu)
+        pushBackContent: cataloguePage
 
-        AppText {
+        // Fermeture par tap externe
+        closeOnBackgroundClick: true
+        closeWithBackButton: true
+
+        // Couleur de fond du modal
+        backgroundColor: "transparent"
+
+        // === CONTENU DU MODAL D'ERREUR ===
+        Rectangle {
+            id: modalContainer
+            width: Math.min(dp(350), parent.width * 0.9)
+            height: parent.height
             anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: parent.verticalCenter
-            anchors.topMargin: dp(50)
-            text: "Chargement des films..."
-            color: "white"
-            font.pixelSize: sp(14)
-        }
-    }
+            anchors.verticalCenter: parent.verticalCenter
 
-    // === OVERLAY MODAL POUR ERREURS ===
-    Rectangle {
-        id: errorOverlay
-        anchors.fill: parent
-        color: Qt.rgba(0, 0, 0, 0.6)
-        visible: false
-        z: 200
+            radius: dp(12)
+            color: Theme.colors.backgroundColor
 
-        Column {
-            anchors.centerIn: parent
-            spacing: dp(20)
-
-            AppText {
-                id: errorText
-                text: ""
-                color: "white"
-                font.pixelSize: sp(10)
-                horizontalAlignment: Text.AlignHCenter
-                anchors.horizontalCenter: parent.horizontalCenter
-                wrapMode: Text.WordWrap
-                maximumLineCount: 2
-                elide: Text.ElideRight
+            layer.enabled: true
+            layer.effect: DropShadow {
+                horizontalOffset: 0
+                verticalOffset: dp(4)
+                radius: dp(8)
+                samples: 17
+                color: Qt.rgba(0, 0, 0, 0.3)
             }
 
-            AppButton {
-                text: "Réessayer"
-                anchors.horizontalCenter: parent.horizontalCenter
-                onClicked: {
-                    errorOverlay.visible = false
-                    logic.refreshCatalogue()
+            Column {
+                anchors.fill: parent
+                anchors.margins: dp(20)
+                spacing: dp(15)
+
+                AppIcon {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    iconType: IconType.exclamationtriangle
+                    // color: Theme.colors.dangerColor
+                    size: dp(24)
+                }
+
+                AppText {
+                    id: errorText
+                    width: parent.width
+                    text: ""
+                    color: Theme.colors.textColor
+                    font.pixelSize: sp(14)
+                    wrapMode: Text.WordWrap
+                    horizontalAlignment: Text.AlignHCenter
+                    maximumLineCount: 4
+                }
+
+                Row {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: dp(15)
+
+                    AppButton {
+                        text: "Rejeter"
+                        flat: true
+                        textColor: Theme.colors.secondaryTextColor
+                        onClicked: errorModal.close()
+                    }
+
+                    AppButton {
+                        text: "Rafraîchir"
+                        backgroundColor: Theme.colors.tintColor
+                        onClicked: {
+                            errorModal.close()
+                            logic.refreshCatalogue()
+                        }
+                    }
                 }
             }
         }
+
+        // Column {
+        //     anchors.fill: parent
+        //     anchors.margins: dp(20)
+        //     spacing: dp(15)
+
+        //     // Icône d'erreur
+        //     AppText {
+        //         anchors.horizontalCenter: parent.horizontalCenter
+        //         text: "⚠️"
+        //         font.pixelSize: sp(30)
+        //     }
+
+        //     // Message d'erreur
+        //     AppText {
+        //         id: errorText
+        //         anchors.horizontalCenter: parent.horizontalCenter
+        //         text: ""
+        //         color: Theme.colors.textColor
+        //         font.pixelSize: sp(14)
+        //         wrapMode: Text.WordWrap
+        //         horizontalAlignment: Text.AlignHCenter
+        //         maximumLineCount: 3
+        //         elide: Text.ElideRight
+        //     }
+
+        //     // Boutons d'action
+        //     Row {
+        //         anchors.horizontalCenter: parent.horizontalCenter
+        //         spacing: dp(15)
+
+        //         AppButton {
+        //             text: "Rejeter"
+        //             flat: true
+        //             textColor: Theme.colors.secondaryTextColor
+        //             onClicked: errorModal.close()
+        //         }
+
+        //         AppButton {
+        //             text: "Rafraîchir"
+        //             backgroundColor: Theme.colors.tintColor
+        //             onClicked: {
+        //                 errorModal.close()
+        //                 logic.refreshCatalogue()
+        //             }
+        //         }
+        //     }
+        // }
     }
 
     // === GESTION DES SIGNAUX ===
@@ -219,7 +313,7 @@ AppPage {
         target: logic
         function onErrorOccurred(message) {
             errorText.text = message
-            errorOverlay.visible = true
+            errorModal.open()
         }
     }
 

@@ -5,8 +5,10 @@ import "../model" as Model
 Item {
     id: catalogueLogic
 
-    // Indicateur d’état de chargement
-    property bool loading: false
+    // Propriétés exposées à la vue
+    readonly property bool loading: Model.FilmDataSingletonModel.isLoading        // Indicateur d’état de chargement
+    readonly property bool hasData: Model.FilmDataSingletonModel.hasRealData
+    readonly property string errorMessage: Model.FilmDataSingletonModel.lastError
 
     // Signal pour propager les erreurs à la vue
     signal errorOccurred(string message)
@@ -14,16 +16,17 @@ Item {
     // Instance du service HTTP
     Model.FilmService {
         id: filmService
+        apiUrl: "https://localhost:8000/api"
     }
 
     // Connexion explicite aux signaux du service
     Connections {
         target: filmService
 
-        // Traitement du résultat positif
+        // Traitement du résultat positif à la réception du signal
         function onFilmsFetched(films) {
             loading = false
-            Model.FilmDataSingletonModel.films = films.map(function(f) {
+            Model.FilmDataSingletonModel.updateFromAPI = films.map(function(f) {
                 return {
                     id: f.id,
                     title: f.title,
@@ -34,20 +37,50 @@ Item {
 
         // Gestion des erreurs
         function onFetchError(errorMessage) {
-            loading = false
+            Model.FilmDataSingletonModel.setError(errorMessage)
             errorOccurred(errorMessage)
         }
     }
 
+    // Timer {
+    //     id: refreshTimer
+    //     interval: 30000   // Délai en ms (ici 0,8 seconde)
+    //     repeat: false
+    //     onTriggered: {
+    //         Model.FilmDataSingletonModel.startLoading();
+    //         filmService.fetchAllFilms();
+    //     }
+    // }
+
     /**
      * Déclenche la récupération des films et affiche le loader
      */
+    /**
+     * Lance le chargement des films depuis l'API
+     */
     function refreshCatalogue() {
-        loading = true
+        Model.FilmDataSingletonModel.startLoading()
         filmService.fetchAllFilms()
+        // refreshTimer.start();
+    }
+
+    /**
+     * Utilise les données de test (pour développement)
+     */
+    function useTestData() {
+        Model.FilmDataSingletonModel.useTestData()
+    }
+
+    // Chargement automatique au démarrage
+    Component.onCompleted: {
+        // Charger depuis l'API
+        Qt.callLater(refreshCatalogue)
+
+        // Utiliser les données de test (pour développement)
+        // Qt.callLater(useTestData)
     }
 
     // Chargement initial à l’affichage de la page
-    Component.onCompleted: refreshCatalogue()
+    // Component.onCompleted: refreshCatalogue()
 
 }
