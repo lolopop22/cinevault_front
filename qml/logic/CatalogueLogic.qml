@@ -7,9 +7,9 @@ Item {
 
     // Propriétés exposées à la vue
     readonly property bool loading: Model.FilmDataSingletonModel.isLoading        // Indicateur d’état de chargement
-    property bool hasData: Model.FilmDataSingletonModel.films && Model.FilmDataSingletonModel.films.length > 0
-    readonly property string errorMessage: Model.FilmDataSingletonModel.lastError
-    readonly property int filmCount: Model.FilmDataSingletonModel.films.length
+    property bool hasData: Model.FilmDataSingletonModel.films && Model.FilmDataSingletonModel.films.length > 0  // Pour détecter la liste de films vide
+    readonly property int filmCount: Model.FilmDataSingletonModel.films.length   // afficher le nombre de films dans le catalogue
+    readonly property string errorMessage: Model.FilmDataSingletonModel.lastError   // pour la gestion d'erreur
 
     // Signal pour propager les erreurs à la vue
     signal errorOccurred(string message)

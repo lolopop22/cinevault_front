@@ -9,11 +9,11 @@ AppPage {
     id: cataloguePage
     title: "Mon Catalogue"
 
-    // Taille fixe des cartes (ne changent plus avec la fenêtre)
+    // Largeur fixe des cartes et espacement (ne changent plus avec la fenêtre)
     readonly property real fixedCardWidth: dp(100)    // Largeur fixe des cartes
     readonly property real itemSpacing: dp(0)         // Espacement fixe
 
-    // Ajout du ratio d'affiche cinéma
+    // Ratio d'affiche de cinéma (2:3) et hauteur pour le titre
     readonly property real posterAspectRatio: 1.5  // Hauteur = largeur * 1.5 (ratio 2:3)
     readonly property real titleHeight: dp(35)     // Espace réservé pour le titre
 
@@ -31,17 +31,22 @@ AppPage {
         return Math.max(1, maxColumns)  // au moins 1 colonne
     }
 
+    // Largeur totale de la grille (pour centrer si besoin)
     readonly property real gridTotalWidth: (fixedCardWidth * columns) + (itemSpacing * (columns - 1))
+
+    // Calcul de la hauteur des cellules selon le ratio et titre
     readonly property real cellHeight: (fixedCardWidth * posterAspectRatio) + titleHeight
 
-    // === LOGIQUE INTÉGRÉE ===
+    // === LOGIQUE MÉTIER INTÉGRÉE (chargement, erreur, comptage) ===
     Logic.CatalogueLogic{
         id: logic
     }
 
-    // Header fixe au-dessus de tout
+    // === HEADER FIXE ===
     Rectangle {
         id: fixedHeader
+
+        // Ancrages pour positionner et centrer
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
@@ -64,6 +69,7 @@ AppPage {
             color: Qt.rgba(0, 0, 0, 0.1)
         }
 
+        // Texte qui affiche le nombre de films ou l’erreur
         AppText {
             anchors.centerIn: parent
             text: logic.errorMessage
@@ -98,85 +104,101 @@ AppPage {
         }
     }
 
-    // === GRILLE DE FILMS ===
+    // === GRILLE DE FILMS AVEC CLIPPING===
     // GridView avec margin top pour éviter le header
-    GridView {
-        id: filmGridView
-
+    Item {
+        id: gridContainer
+        clip: true                                   // Cache tout ce qui sort des limites
         anchors.top: fixedHeader.bottom
+        anchors.topMargin: dp(5)
         anchors.horizontalCenter: parent.horizontalCenter
-        // anchors.margins: dp(16)
-        anchors.topMargin: dp(10) // Marge pour éviter le header
 
         width: gridTotalWidth
-        height: parent.height - fixedHeader.height - dp(32)
+        height: parent.height - fixedHeader.height - dp(0)
 
-        // CellWidth/Height fixes
-        cellWidth: fixedCardWidth
-        cellHeight: cataloguePage.cellHeight
+        GridView {
+            id: filmGridView
 
-        clip: false
+            anchors.fill: parent
 
-        // A décommenter lorsqu'on aura de gros volume de films à afficher
-        // cacheBuffer: cellHeight * 2
-        // reuseItems: true
+            // CellWidth/Height fixes
+            cellWidth: fixedCardWidth              // Cartes largeur fixe
+            cellHeight: cataloguePage.cellHeight   // Hauteur calculée
 
-        // ← CONDITION : visible seulement si pas en chargement ET qu'il y a des films
-        visible: !logic.loading && Model.FilmDataSingletonModel.films.length > 0
+            model: Model.FilmDataSingletonModel && Model.FilmDataSingletonModel.films ? Model.FilmDataSingletonModel.films : []
 
-        // Opacité réduite pendant le chargement, mais visible
-        // opacity: logic.loading ? 0.5 : 1.0
+            // ← CONDITION : visible seulement si pas en chargement ET qu'il y a des films
+            visible: !logic.loading && Model.FilmDataSingletonModel.films.length > 0
 
-        model: Model.FilmDataSingletonModel && Model.FilmDataSingletonModel.films ? Model.FilmDataSingletonModel.films : []
+            // anchors.top: fixedHeader.bottom
+            // anchors.horizontalCenter: parent.horizontalCenter
+            // // anchors.margins: dp(16)
+            // anchors.topMargin: dp(10) // Marge pour éviter le header
 
-        delegate: Rectangle {
-            width: fixedCardWidth  // Largeur dynamique
-            height: cataloguePage.cellHeight - dp(4) // Petite marge interne
-            radius: dp(6)
-            color: Theme.colors.backgroundColor
-            border.color: Theme.colors.dividerColor
-            border.width: dp(0.5)
+            // width: gridTotalWidth
 
-            property real padding: dp(3)
-            Column {
-                anchors.fill: parent
-                anchors.margins: parent.padding
-                spacing: dp(4)
+            // height: parent.height - fixedHeader.height - dp(32)
 
-                // Zone affiche avec largeur FIXE
-                Rectangle {
-                    width: parent.width
-                    height: parent.width * posterAspectRatio // Respect du ratio cinéma et utilisation de la largeur fixe
-                    radius: dp(4)
-                    color: {
-                        var colors = ["#e3f2fd", "#f3e5f5", "#e8f5e8", "#fff3e0", "#fce4ec"]
-                        return colors[index % colors.length]
+            // A décommenter lorsqu'on aura de gros volume de films à afficher
+            // cacheBuffer: cellHeight * 2
+            // reuseItems: true
+
+
+
+            // Opacité réduite pendant le chargement, mais visible
+            // opacity: logic.loading ? 0.5 : 1.0
+
+
+            delegate: Rectangle {
+                width: fixedCardWidth  // Largeur dynamique
+                height: cataloguePage.cellHeight - dp(4) // Petite marge interne
+                radius: dp(6)
+                color: Theme.colors.backgroundColor
+                border.color: Theme.colors.dividerColor
+                border.width: dp(0.5)
+
+                property real padding: dp(3)
+                Column {
+                    anchors.fill: parent
+                    anchors.margins: parent.padding
+                    spacing: dp(4)
+
+                    // Zone affiche avec largeur FIXE
+                    Rectangle {
+                        width: parent.width
+                        height: parent.width * posterAspectRatio // Respect du ratio cinéma et utilisation de la largeur fixe
+                        radius: dp(4)
+                        color: {
+                            var colors = ["#e3f2fd", "#f3e5f5", "#e8f5e8", "#fff3e0", "#fce4ec"]
+                            return colors[index % colors.length]
+                        }
+
+                        AppText {
+                            anchors.centerIn: parent
+                            text: "🎬"
+                            font.pixelSize: sp(20)
+                        }
                     }
 
+                    // Zone titre (fixe)
                     AppText {
-                        anchors.centerIn: parent
-                        text: "🎬"
-                        font.pixelSize: sp(20)
+                        width: parent.width
+                        height: titleHeight - dp(8)
+                        text: modelData ? modelData.title : sp("?")
+                        font.pixelSize: sp(9)
+                        font.bold: true
+                        color: Theme.colors.textColor
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        wrapMode: Text.WordWrap
+                        maximumLineCount: 2
+                        elide: Text.ElideRight
                     }
-                }
-
-                // Zone titre (fixe)
-                AppText {
-                    width: parent.width
-                    height: titleHeight - dp(8)
-                    text: modelData ? modelData.title : sp("?")
-                    font.pixelSize: sp(9)
-                    font.bold: true
-                    color: Theme.colors.textColor
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    wrapMode: Text.WordWrap
-                    maximumLineCount: 2
-                    elide: Text.ElideRight
                 }
             }
         }
     }
+
 
     // === MODAL D'ERREUR EN BAS DE FENÊTRE ===
     AppModal {
