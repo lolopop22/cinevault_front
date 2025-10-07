@@ -181,7 +181,7 @@ AppPage {
 
         // Configuration modal partiel en bas
         fullscreen: false
-        modalHeight: dp(200)
+        modalHeight: dp(150)
 
         // Positionnement en bas (via ancrage du contenu)
         pushBackContent: cataloguePage
@@ -196,7 +196,7 @@ AppPage {
         // === CONTENU DU MODAL D'ERREUR ===
         Rectangle {
             id: modalContainer
-            width: Math.min(dp(350), parent.width * 0.9)
+            width: Math.min(dp(350), parent.width * 0.9)   // largeur contrôlée et responsive
             height: parent.height
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
@@ -215,8 +215,8 @@ AppPage {
 
             Column {
                 anchors.fill: parent
-                anchors.margins: dp(20)
-                spacing: dp(15)
+                anchors.margins: dp(10)
+                spacing: dp(12)
 
                 AppIcon {
                     anchors.horizontalCenter: parent.horizontalCenter
@@ -238,7 +238,7 @@ AppPage {
 
                 Row {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    spacing: dp(15)
+                    spacing: dp(20)
 
                     AppButton {
                         text: "Rejeter"
@@ -251,61 +251,13 @@ AppPage {
                         text: "Rafraîchir"
                         backgroundColor: Theme.colors.tintColor
                         onClicked: {
-                            errorModal.close()
+                            // errorModal.close()
                             logic.refreshCatalogue()
                         }
                     }
                 }
             }
         }
-
-        // Column {
-        //     anchors.fill: parent
-        //     anchors.margins: dp(20)
-        //     spacing: dp(15)
-
-        //     // Icône d'erreur
-        //     AppText {
-        //         anchors.horizontalCenter: parent.horizontalCenter
-        //         text: "⚠️"
-        //         font.pixelSize: sp(30)
-        //     }
-
-        //     // Message d'erreur
-        //     AppText {
-        //         id: errorText
-        //         anchors.horizontalCenter: parent.horizontalCenter
-        //         text: ""
-        //         color: Theme.colors.textColor
-        //         font.pixelSize: sp(14)
-        //         wrapMode: Text.WordWrap
-        //         horizontalAlignment: Text.AlignHCenter
-        //         maximumLineCount: 3
-        //         elide: Text.ElideRight
-        //     }
-
-        //     // Boutons d'action
-        //     Row {
-        //         anchors.horizontalCenter: parent.horizontalCenter
-        //         spacing: dp(15)
-
-        //         AppButton {
-        //             text: "Rejeter"
-        //             flat: true
-        //             textColor: Theme.colors.secondaryTextColor
-        //             onClicked: errorModal.close()
-        //         }
-
-        //         AppButton {
-        //             text: "Rafraîchir"
-        //             backgroundColor: Theme.colors.tintColor
-        //             onClicked: {
-        //                 errorModal.close()
-        //                 logic.refreshCatalogue()
-        //             }
-        //         }
-        //     }
-        // }
     }
 
     // === GESTION DES SIGNAUX ===
