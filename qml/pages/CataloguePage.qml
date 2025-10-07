@@ -110,7 +110,7 @@ AppPage {
         id: gridContainer
         clip: true                                   // Cache tout ce qui sort des limites
         anchors.top: fixedHeader.bottom
-        anchors.topMargin: dp(5)
+        anchors.topMargin: dp(5)                     // Marge pour éviter le header
         anchors.horizontalCenter: parent.horizontalCenter
 
         width: gridTotalWidth
@@ -130,20 +130,9 @@ AppPage {
             // ← CONDITION : visible seulement si pas en chargement ET qu'il y a des films
             visible: !logic.loading && Model.FilmDataSingletonModel.films.length > 0
 
-            // anchors.top: fixedHeader.bottom
-            // anchors.horizontalCenter: parent.horizontalCenter
-            // // anchors.margins: dp(16)
-            // anchors.topMargin: dp(10) // Marge pour éviter le header
-
-            // width: gridTotalWidth
-
-            // height: parent.height - fixedHeader.height - dp(32)
-
             // A décommenter lorsqu'on aura de gros volume de films à afficher
             // cacheBuffer: cellHeight * 2
             // reuseItems: true
-
-
 
             // Opacité réduite pendant le chargement, mais visible
             // opacity: logic.loading ? 0.5 : 1.0
