@@ -44,9 +44,9 @@ Item {
      * Met à jour les films depuis l'API et marque comme "vraies données"
      */
     function updateFromAPI(newFilms) {
-        internal.isLoading = false
         internal.films = newFilms
         internal.hasRealData = true
+        internal.isLoading = false
         internal.lastError = ""
         console.log("Films mis à jour depuis l'API:", newFilms.length, "films chargés")
     }

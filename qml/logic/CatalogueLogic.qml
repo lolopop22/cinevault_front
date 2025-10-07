@@ -25,14 +25,15 @@ Item {
 
         // Traitement du résultat positif à la réception du signal
         function onFilmsFetched(films) {
-            loading = false
-            Model.FilmDataSingletonModel.updateFromAPI = films.map(function(f) {
-                return {
-                    id: f.id,
-                    title: f.title,
-                    poster_url: f.poster_url
-                }
-            })
+            Model.FilmDataSingletonModel.updateFromAPI(
+                films.map(function(f) {
+                    return {
+                        id: f.id,
+                        title: f.title,
+                        poster_url: f.poster_url
+                    }
+                })
+            )
         }
 
         // Gestion des erreurs
