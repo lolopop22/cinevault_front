@@ -198,8 +198,11 @@ AppPage {
             id: modalContainer
             width: Math.min(dp(350), parent.width * 0.9)   // largeur contrôlée et responsive
             height: parent.height
+
+            // Ancré en bas avec marge pour le décaler vers le haut
             anchors.horizontalCenter: parent.horizontalCenter
-            anchors.verticalCenter: parent.verticalCenter
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: dp(40)
 
             radius: dp(12)
             color: Theme.colors.backgroundColor
@@ -221,7 +224,7 @@ AppPage {
                 AppIcon {
                     anchors.horizontalCenter: parent.horizontalCenter
                     iconType: IconType.exclamationtriangle
-                    // color: Theme.colors.dangerColor
+                    color: "#FFA500"
                     size: dp(24)
                 }
 
