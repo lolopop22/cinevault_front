@@ -34,7 +34,6 @@ AppPage {
     readonly property real gridTotalWidth: (fixedCardWidth * columns) + (itemSpacing * (columns - 1))
     readonly property real cellHeight: (fixedCardWidth * posterAspectRatio) + titleHeight
 
-
     // === LOGIQUE INTÉGRÉE ===
     Logic.CatalogueLogic{
         id: logic
@@ -67,7 +66,11 @@ AppPage {
 
         AppText {
             anchors.centerIn: parent
-            text: "Mon Catalogue"
+            text: logic.errorMessage
+                  ? "Mon Catalogue – Erreur"
+                  : logic.hasData
+                    ? "Mon Catalogue – " + logic.filmCount + " films"
+                    : "Mon Catalogue – Aucun film"
             font.pixelSize: sp(18)
             font.bold: true
             color: Theme.colors.textColor

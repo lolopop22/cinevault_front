@@ -10,7 +10,6 @@ Item {
 
     // État de chargement initial
     readonly property bool isLoading: internal.isLoading
-    readonly property alias hasRealData: internal.hasRealData
     readonly property alias lastError: internal.lastError
 
     QtObject {
@@ -45,7 +44,6 @@ Item {
      */
     function updateFromAPI(newFilms) {
         internal.films = newFilms
-        internal.hasRealData = true
         internal.isLoading = false
         internal.lastError = ""
         console.log("Films mis à jour depuis l'API:", newFilms.length, "films chargés")
@@ -76,7 +74,6 @@ Item {
      */
     function useTestData() {
         internal.films = internal.testFilms
-        internal.hasRealData = false
         internal.isLoading = false
         console.log("Utilisation des données de test:", internal.testFilms.length, "films")
     }

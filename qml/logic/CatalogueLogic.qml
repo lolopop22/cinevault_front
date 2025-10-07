@@ -7,8 +7,9 @@ Item {
 
     // Propriétés exposées à la vue
     readonly property bool loading: Model.FilmDataSingletonModel.isLoading        // Indicateur d’état de chargement
-    readonly property bool hasData: Model.FilmDataSingletonModel.hasRealData
+    property bool hasData: Model.FilmDataSingletonModel.films && Model.FilmDataSingletonModel.films.length > 0
     readonly property string errorMessage: Model.FilmDataSingletonModel.lastError
+    readonly property int filmCount: Model.FilmDataSingletonModel.films.length
 
     // Signal pour propager les erreurs à la vue
     signal errorOccurred(string message)
@@ -70,15 +71,19 @@ Item {
      */
     function useTestData() {
         Model.FilmDataSingletonModel.useTestData()
+        // Forcer une mise à jour immédiate
+        filmCount = Model.FilmDataSingletonModel.films.length
+        hasData = filmCount > 0
+        errorMessage = ""
     }
 
     // Chargement automatique au démarrage
     Component.onCompleted: {
         // Charger depuis l'API
-        Qt.callLater(refreshCatalogue)
+        // Qt.callLater(refreshCatalogue)
 
         // Utiliser les données de test (pour développement)
-        // Qt.callLater(useTestData)
+        Qt.callLater(useTestData)
     }
 
     // Chargement initial à l’affichage de la page
