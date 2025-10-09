@@ -4,6 +4,8 @@ import QtQuick.Controls 2.15
 import Qt5Compat.GraphicalEffects
 import "../logic" as Logic
 import "../model" as Model
+import "../components" as Components
+
 
 AppPage {
     id: cataloguePage
@@ -153,20 +155,27 @@ AppPage {
                     spacing: dp(4)
 
                     // Zone affiche avec largeur FIXE
-                    Rectangle {
+                    // Rectangle {
+                    //     width: parent.width
+                    //     height: parent.width * posterAspectRatio // Respect du ratio cinéma et utilisation de la largeur fixe
+                    //     radius: dp(4)
+                    //     color: {
+                    //         var colors = ["#e3f2fd", "#f3e5f5", "#e8f5e8", "#fff3e0", "#fce4ec"]
+                    //         return colors[index % colors.length]
+                    //     }
+
+                    //     AppText {
+                    //         anchors.centerIn: parent
+                    //         text: "🎬"
+                    //         font.pixelSize: sp(20)
+                    //     }
+                    // }
+
+                    // Zone affiche avec largeur FIXE
+                    Components.PosterImage {
                         width: parent.width
                         height: parent.width * posterAspectRatio // Respect du ratio cinéma et utilisation de la largeur fixe
-                        radius: dp(4)
-                        color: {
-                            var colors = ["#e3f2fd", "#f3e5f5", "#e8f5e8", "#fff3e0", "#fce4ec"]
-                            return colors[index % colors.length]
-                        }
-
-                        AppText {
-                            anchors.centerIn: parent
-                            text: "🎬"
-                            font.pixelSize: sp(20)
-                        }
+                        source: modelData ? modelData.poster_url : ""
                     }
 
                     // Zone titre (fixe)

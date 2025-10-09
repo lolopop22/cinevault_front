@@ -21,18 +21,20 @@ Item {
 
         // Données de test
         property var testFilms: [
-            { id: 1, title: "Avatar", poster_url: "blue" },
-            { id: 2, title: "Avengers: Endgame", poster_url: "red" },
-            { id: 3, title: "Spider-Man: No Way Home", poster_url: "yellow" },
-            { id: 4, title: "Black Panther", poster_url: "blue" },
-            { id: 5, title: "Inception", poster_url: "red" },
-            { id: 6, title: "The Dark Knight", poster_url: "yellow" },
-            { id: 7, title: "Interstellar", poster_url: "blue" },
-            { id: 8, title: "Joker", poster_url: "red" },
-            { id: 9, title: "Pulp Fiction", poster_url: "yellow" },
-            { id: 10, title: "The Matrix", poster_url: "blue" },
-            { id: 11, title: "Forrest Gump", poster_url: "red" },
-            { id: 12, title: "Gladiator", poster_url: "yellow" }
+            { id: 1, title: "Avatar", poster_url: "https://image.tmdb.org/t/p/w342/jRXYjXNq0Cs2TcJjLkki24MLp7u.jpg" },
+            { id: 2, title: "Avengers: Endgame", poster_url: "https://image.tmdb.org/t/p/w342/or06FN3Dka5tukK1e9sl16pB3iy.jpg" },
+            { id: 3, title: "Spider-Man: No Way Home", poster_url: "https://image.tmdb.org/t/p/w342/1g0dhYtq4irTY1GPXvft6k4YLjm.jpg" },
+            { id: 4, title: "Test Erreur", poster_url: "https://invalid-url.com/notfound.jpg" },
+            { id: 5, title: "Pas d'image", poster_url: "" },
+            { id: 6, title: "Timout test", poster_url: "https://httpbin.org/delay/10" },
+            { id: 7, title: "Spider-man", poster_url: "https://image.tmdb.org/t/p/w342/1g0dhYtq4irTY1GPXvft6k4YLjm.jpg" },
+            { id: 8, title: "URL invalide", poster_url: "https://invalid-domain-test.xyz/notfound.jpg" },
+            { id: 9, title: "Interstellar", poster_url: "https://image.tmdb.org/t/p/w342/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg" },
+            { id: 10, title: "Joker", poster_url: "red" },
+            { id: 11, title: "Pulp Fiction", poster_url: "yellow" },
+            { id: 12, title: "The Matrix", poster_url: "blue" },
+            { id: 13, title: "Forrest Gump", poster_url: "red" },
+            { id: 14, title: "Gladiator", poster_url: "yellow" }
         ]
 
         // Films actuels (vide au départ, rempli par l'API)

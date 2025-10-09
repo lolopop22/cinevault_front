@@ -1,5 +1,7 @@
 import Felgo 4.0
 import QtQuick 2.15
+import Qt5Compat.GraphicalEffects
+
 
 Item {
     id: posterImage
@@ -30,6 +32,32 @@ Item {
         sourceSize.height: Math.min(height * 2, 600)
 
         visible: isReady   // Masquer l'image pendant chargement ou si erreur
+
+        // Coins arrondis avec masque
+        layer.enabled: true
+        layer.effect: OpacityMask {
+            maskSource: Rectangle {
+                width: image.width
+                height: image.height
+                radius: posterImage.borderRadius
+            }
+        }
+
+        onStatusChanged: {
+            switch (status) {
+                case Image.Ready:
+                    console.log("✅ Image chargée:", posterImage.source,
+                               "Taille rendu:", width + "x" + height,
+                               "SourceSize:", sourceSize.width + "x" + sourceSize.height)
+                    break
+                case Image.Error:
+                    console.log("❌ Erreur image:", posterImage.source)
+                    break
+                case Image.Loading:
+                    console.log("⏳ Chargement:", posterImage.source)
+                    break
+            }
+        }
     }
 
     // Placeholder pendant le chargement
@@ -71,6 +99,14 @@ Item {
                 to: parent.width  // finit hors écran à droite
                 duration: 1500
                 loops: Animation.Infinite  // l'animation continue jusqu'à ce que l'image soit chargée
+
+                onRunningChanged: {
+                    if (running) {
+                        console.log("✨ Shimmer démarré pour:", posterImage.source)
+                    } else {
+                        console.log("🛑 Shimmer arrêté pour:", posterImage.source)
+                    }
+                }
             }
         }
     }
@@ -105,12 +141,19 @@ Item {
             }
         }
 
-        // Possibilité de retry
+        // Possibilité de retry (zone cliquable qui prend toute la zone)
         MouseArea {
             anchors.fill: parent
             onClicked: {
+                console.log("🔄 Retry demandé pour:", posterImage.source)
+
+                // Technique de reset
+                var originalSource = posterImage.source
                 image.source = ""   // reset de l'état de l'image
-                image.source = posterImage.source  // déclenchement d'un nouveau chargement
+                // image.source = posterImage.source
+                Qt.callLater(function() {
+                    image.source = originalSource  // déclenchement d'un nouveau chargement
+                })
             }
         }
     }
