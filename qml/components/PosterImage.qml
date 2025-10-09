@@ -74,5 +74,46 @@ Item {
             }
         }
     }
+
+    // Fallback en cas d'erreur
+    Rectangle {
+        id: errorFallback
+        anchors.fill: parent
+        radius: borderRadius
+        visible: hasError
+        color: "#ffebee"          // Rose très pâle
+        border.color: "#ffcdd2"   // Rose clair
+        border.width: 1
+
+        Column {
+            anchors.centerIn: parent
+            spacing: dp(8)  // standard d'espacement moyen
+
+            AppIcon {
+                anchors.horizontalCenter: parent.horizontalCenter
+                iconType: IconType.exclamationtriangle
+                size: dp(24)
+                color: "#f44336"
+            }
+
+            AppText {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: "Image indisponible"
+                font.pixelSize: sp(10)
+                color: "#666"
+                horizontalAlignment: Text.AlignHCenter
+            }
+        }
+
+        // Possibilité de retry
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                image.source = ""   // reset de l'état de l'image
+                image.source = posterImage.source  // déclenchement d'un nouveau chargement
+            }
+        }
+    }
+
 }
 
