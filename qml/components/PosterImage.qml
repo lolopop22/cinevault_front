@@ -51,6 +51,28 @@ Item {
             size: Math.min(parent.width * 0.3, dp(32))  // afin d'éviter les icônes trop grandes
             color: "#bdbdbd"
         }
+
+        // Animation de chargement
+        Rectangle {
+            id: shimmer  // shimmer :  effet de "brillance" qui traverse l'élément
+            anchors.fill: parent
+            radius: parent.radius
+
+            gradient: Gradient { // Transparent -> Blanc semi-transparent -> Transparent
+                orientation: Gradient.Horizontal
+                GradientStop { position: 0.0; color: "transparent" }
+                GradientStop { position: 0.5; color: Qt.rgba(1, 1, 1, 0.3) }  // blanc à 30% d'opacité
+                GradientStop { position: 1.0; color: "transparent" }
+            }
+
+            PropertyAnimation on x {
+                running: placeholder.visible && isLoading // animation uniquement quand nécessaire
+                from: -width      // commence hors écran à gauche
+                to: parent.width  // finit hors écran à droite
+                duration: 1500
+                loops: Animation.Infinite  // l'animation continue jusqu'à ce que l'image soit chargée
+            }
+        }
     }
 }
 
