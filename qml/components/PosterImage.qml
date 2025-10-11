@@ -19,6 +19,10 @@ Item {
     readonly property bool hasError: image.status === Image.Error
     readonly property bool isReady: image.status === Image.Ready
 
+    Component.onCompleted: {
+        console.log("PosterImage initialisé pour:", source)
+    }
+
     // Image principale
     Image {
         id: image
@@ -33,8 +37,8 @@ Item {
 
         visible: isReady   // Masquer l'image pendant chargement ou si erreur
 
-        // Coins arrondis avec masque
-        layer.enabled: true
+        // Coins arrondis avec masque (Image ne supporte pas nativement la propirété radius)
+        layer.enabled: true  // pour appliquer les effets sur les éléments Qt
         layer.effect: OpacityMask {
             maskSource: Rectangle {
                 width: image.width
@@ -58,6 +62,12 @@ Item {
                     break
             }
         }
+
+        onProgressChanged: {
+            if (status === Image.Loading && progress > 0) {
+                console.log("📊 Progression:", Math.round(progress * 100) + "%", source)
+            }
+        }
     }
 
     // Placeholder pendant le chargement
@@ -68,8 +78,8 @@ Item {
         visible: isLoading || source === ""  // placeholder visible si image en téléchargement ou source pas définier
 
         gradient: Gradient { // gradient vertical pour de la profondeur
-            GradientStop { position: 0.0; color: "#f5f5f5" }
-            GradientStop { position: 1.0; color: "#e0e0e0" }
+            GradientStop { position: 0.0; color: "#d0d0d0" }
+            GradientStop { position: 1.0; color: "#b0b0b0" }
         }
 
         // Icône cinéma
@@ -78,6 +88,7 @@ Item {
             iconType: IconType.film
             size: Math.min(parent.width * 0.3, dp(32))  // afin d'éviter les icônes trop grandes
             color: "#bdbdbd"
+            z: 2  // Icône cinéma par-dessus le shimmer
         }
 
         // Animation de chargement
@@ -85,20 +96,24 @@ Item {
             id: shimmer  // shimmer :  effet de "brillance" qui traverse l'élément
             anchors.fill: parent
             radius: parent.radius
+            z: 1 // shimmer au-dessus du gradient de fond
 
             gradient: Gradient { // Transparent -> Blanc semi-transparent -> Transparent
                 orientation: Gradient.Horizontal
                 GradientStop { position: 0.0; color: "transparent" }
-                GradientStop { position: 0.5; color: Qt.rgba(1, 1, 1, 0.3) }  // blanc à 30% d'opacité
+                GradientStop { position: 0.25; color: Qt.rgba(1,1,1,0.6) }  // blanc à 60% d'opacité
+                GradientStop { position: 0.5; color: Qt.rgba(1,1,1,0.4) }
+                GradientStop { position: 0.75; color: Qt.rgba(1,1,1,0.6) }
                 GradientStop { position: 1.0; color: "transparent" }
             }
 
             PropertyAnimation on x {
                 running: placeholder.visible && isLoading // animation uniquement quand nécessaire
-                from: -width      // commence hors écran à gauche
-                to: parent.width  // finit hors écran à droite
-                duration: 1500
+                from: -parent.width      // commence hors écran à gauche
+                to: parent.width * 2  // finit hors écran à droite
+                duration: 3000
                 loops: Animation.Infinite  // l'animation continue jusqu'à ce que l'image soit chargée
+                easing.type: Easing.InOutQuad
 
                 onRunningChanged: {
                     if (running) {
@@ -137,6 +152,14 @@ Item {
                 text: "Image indisponible"
                 font.pixelSize: sp(10)
                 color: "#666"
+                horizontalAlignment: Text.AlignHCenter
+            }
+
+            AppText {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: "Toucher pour réessayer"
+                font.pixelSize: sp(7)
+                color: "#999"
                 horizontalAlignment: Text.AlignHCenter
             }
         }

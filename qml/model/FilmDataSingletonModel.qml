@@ -30,8 +30,8 @@ Item {
             { id: 7, title: "Spider-man", poster_url: "https://image.tmdb.org/t/p/w342/1g0dhYtq4irTY1GPXvft6k4YLjm.jpg" },
             { id: 8, title: "URL invalide", poster_url: "https://invalid-domain-test.xyz/notfound.jpg" },
             { id: 9, title: "Interstellar", poster_url: "https://image.tmdb.org/t/p/w342/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg" },
-            { id: 10, title: "Joker", poster_url: "red" },
-            { id: 11, title: "Pulp Fiction", poster_url: "yellow" },
+            { id: 10, title: "The Dark Knight", poster_url: "https://image.tmdb.org/t/p/w342/qJ2tW6WMUDux911r6m7haRef0WH.jpg" },
+            { id: 11, title: "Pulp Fiction", poster_url: "https://image.tmdb.org/t/p/w342/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg" },
             { id: 12, title: "The Matrix", poster_url: "blue" },
             { id: 13, title: "Forrest Gump", poster_url: "red" },
             { id: 14, title: "Gladiator", poster_url: "yellow" }
