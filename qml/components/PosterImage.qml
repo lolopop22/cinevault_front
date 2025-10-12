@@ -76,12 +76,6 @@ Item {
         anchors.fill: parent
         radius: borderRadius
         visible: isLoading || source === ""  // placeholder visible si image en téléchargement ou source pas définier
-        // color: "#e8e8e8"  // ✅ Fond plus sombre pour plus de contraste
-
-        // gradient: Gradient { // gradient vertical pour de la profondeur
-        //     GradientStop { position: 0.0; color: "#d0d0d0" }
-        //     GradientStop { position: 1.0; color: "#b0b0b0" }
-        // }
 
         // Fond gris clair uniformisé
         color: "#f0f0f0"
@@ -100,96 +94,75 @@ Item {
             z: 2  // Icône cinéma par-dessus le shimmer
         }
 
-        // Version pour debug du shimmer
+        // Animation de chargement (shimmer)
         Rectangle {
-            id: shimmer
-            width: parent.width * 0.4  // Encore plus étroit pour debug
+            id: shimmer  // shimmer :  effet de "brillance" qui traverse l'élément
+            width: parent.width * 0.6  // 60% de la largeur seulement
             height: parent.height
             radius: parent.radius
             visible: isLoading         // uniquement pendant chargement
             z: 1
 
-            gradient: Gradient { // Transparent -> Blanc semi-transparent -> Transparent
+            gradient: Gradient {  // Transparent -> Blanc semi-transparent -> Transparent
                 orientation: Gradient.Horizontal
                 GradientStop { position: 0.0; color: "transparent" }
-                GradientStop { position: 0.25; color: Qt.rgba(1,1,1,0.6) }  // blanc à 60% d'opacité
-                GradientStop { position: 0.5; color: Qt.rgba(1,1,1,0.4) }
-                GradientStop { position: 0.75; color: Qt.rgba(1,1,1,0.6) }
+                GradientStop { position: 0.2; color: Qt.rgba(1,1,1,0.3) }  // blanc à 30% d'opacité
+                GradientStop { position: 0.4; color: Qt.rgba(1,1,1,0.8) }
+                GradientStop { position: 0.5; color: Qt.rgba(1,1,1,1.0) }  // Blanc pur
+                GradientStop { position: 0.6; color: Qt.rgba(1,1,1,0.8) }
+                GradientStop { position: 0.8; color: Qt.rgba(1,1,1,0.3) }
                 GradientStop { position: 1.0; color: "transparent" }
             }
 
-            // gradient: Gradient {
-            //     orientation: Gradient.Horizontal
-            //     GradientStop { position: 0.0; color: "transparent" }
-            //     GradientStop { position: 0.3; color: Qt.rgba(1,1,1,0.9) }  // Plus opaque
-            //     GradientStop { position: 0.5; color: Qt.rgba(1,1,1,1.0) }  // Blanc pur au centre
-            //     GradientStop { position: 0.7; color: Qt.rgba(1,1,1,0.9) }  // Plus opaque
-            //     GradientStop { position: 1.0; color: "transparent" }
+            // Effet de flou pour adoucir
+            layer.enabled: true
+            layer.effect: FastBlur {
+                radius: 4
+            }
+
+            // A décomenter si on veut un effet plus marqué
+            // // Bordure brillante pour accentuer l'effet
+            // border.width: 1
+            // border.color: Qt.rgba(1,1,1,0.5)
+
+            // // Ombre pour plus de profondeur
+            // layer.enabled: true
+            // layer.effect: DropShadow {
+            //     horizontalOffset: 0
+            //     verticalOffset: 0
+            //     radius: 6
+            //     samples: 13
+            //     color: Qt.rgba(1,1,1,0.3)
             // }
 
             PropertyAnimation on x {
+                // animation uniquement quand nécessaire (placeholder visible et image en cours de chargement)
                 running: placeholder.visible && isLoading
-                from: -shimmer.width * 0.25  // Commence à moitié caché
+                from: -shimmer.width * 0.25  // Commence à moitié caché  (// basé sur la largeur du composant)
                 to: placeholder.width   // sort complètement à droite
                 // from: 0   // ← Bord gauche
                 // to: placeholder.width - shimmer.width         // ← Bord droit
-                duration: 1500  // Plus rapide pour debug
-                loops: Animation.Infinite
+                duration: 1000  // Plus rapide -> plus visible
+                loops: Animation.Infinite   // l'animation continue jusqu'à ce que l'image soit chargée
+                easing.type: Easing.Linear  // Mouvement constant
 
                 onRunningChanged: {
-                    console.log("🔴 Debug shimmer:", running ? "DÉMARRE" : "ARRÊTE")
+                    if (running) {
+                        console.log("✨ Shimmer démarré pour:", posterImage.source, " - largeur: ", shimmer.width)
+                    } else {
+                        console.log("🛑 Shimmer arrêté pour:", posterImage.source)
+                    }
+                }
+
+                // Debug des conditions
+                Component.onCompleted: {
+                    console.log("🔍 Conditions shimmer:")
+                    console.log("  - placeholder.visible:", placeholder.visible)
+                    console.log("  - isLoading:", isLoading)
+                    console.log("  - running:", running)
                 }
             }
         }
-
-        // // Animation de chargement
-        // Rectangle {
-        //     id: shimmer  // shimmer :  effet de "brillance" qui traverse l'élément
-        //     // anchors.fill: parent
-        //     width: parent.width * 0.5  // 50% de la largeur seulement
-        //     height: parent.height
-        //     radius: parent.radius
-        //     z: 1 // shimmer au-dessus du gradient de fond
-
-        //     gradient: Gradient { // Transparent -> Blanc semi-transparent -> Transparent
-        //         orientation: Gradient.Horizontal
-        //         GradientStop { position: 0.0; color: "transparent" }
-        //         // GradientStop { position: 0.25; color: Qt.rgba(1,1,1,0.6) }  // blanc à 60% d'opacité
-        //         // GradientStop { position: 0.5; color: Qt.rgba(1,1,1,0.4) }
-        //         // GradientStop { position: 0.75; color: Qt.rgba(1,1,1,0.6) }
-        //         GradientStop { position: 0.3; color: Qt.rgba(1,1,1,0.8) }  // Plus opaque
-        //         GradientStop { position: 0.5; color: Qt.rgba(1,1,1,1.0) }  // Complètement blanc au centre
-        //         GradientStop { position: 0.7; color: Qt.rgba(1,1,1,0.8) }
-        //         GradientStop { position: 1.0; color: "transparent" }
-        //     }
-
-        //     PropertyAnimation on x {
-        //         running: placeholder.visible && isLoading // animation uniquement quand nécessaire
-        //         from: -shimmer.width      // basé sur la largeur du composant
-        //         // to: parent.width * 2  // finit hors écran à droite
-        //         to: placeholder.width // ← Jusqu'au bout du placeholder
-        //         duration: 2000
-        //         loops: Animation.Infinite  // l'animation continue jusqu'à ce que l'image soit chargée
-        //         // easing.type: Easing.InOutQuad
-        //         easing.type: Easing.Linear   // Mouvement constant
-
-        //         // Debug des conditions
-        //         Component.onCompleted: {
-        //             console.log("🔍 Conditions shimmer:")
-        //             console.log("  - placeholder.visible:", placeholder.visible)
-        //             console.log("  - isLoading:", isLoading)
-        //             console.log("  - running:", running)
-        //         }
-
-        //         onRunningChanged: {
-        //             if (running) {
-        //                 console.log("✨ Shimmer démarré pour:", posterImage.source, " - largeur: ", shimmer.width)
-        //             } else {
-        //                 console.log("🛑 Shimmer arrêté pour:", posterImage.source)
-        //             }
-        //         }
-        //     }
-        // }
     }
 
     // Fallback en cas d'erreur
