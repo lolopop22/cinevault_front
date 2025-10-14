@@ -43,6 +43,9 @@ AppPage {
     // permet de déterminer l'espace tampon avan/après la zone visible du viewport de la GridView
     property real visibilityThreshold: dp(50)   // configurable
 
+    // Propriété globale pour activer/désactiver lazy loading
+    property bool enableLazyLoadingGlobal: true
+
     // === LOGIQUE MÉTIER INTÉGRÉE (chargement, erreur, comptage) ===
     Logic.CatalogueLogic{
         id: logic
@@ -83,7 +86,7 @@ AppPage {
                   : logic.hasData
                     ? "Mon Catalogue – " + logic.filmCount + " films"
                     : "Mon Catalogue – Aucun film"
-            font.pixelSize: sp(18)
+            font.pixelSize: sp(16)
             font.bold: true
             color: Theme.colors.textColor
         }
@@ -203,8 +206,8 @@ AppPage {
                         height: parent.width * posterAspectRatio // Respect du ratio cinéma et utilisation de la largeur fixe
                         source: modelData ? modelData.poster_url : ""
 
-                        // ✅ Configuration lazy loading (activé pour test)
-                        enableLazyLoading: true
+                        // Configuration lazy loading (activé pour test)
+                        enableLazyLoading: cataloguePage.enableLazyLoadingGlobal
                         isVisible: parent.parent.itemVisible  // Référence au delegate
                         visibilityThreshold: cataloguePage.visibilityThreshold
 
