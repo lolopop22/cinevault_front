@@ -39,6 +39,10 @@ AppPage {
     // Calcul de la hauteur des cellules selon le ratio et titre
     readonly property real cellHeight: (fixedCardWidth * posterAspectRatio) + titleHeight
 
+    // Distance en pixels avant de charger image
+    // permet de déterminer l'espace tampon avan/après la zone visible du viewport de la GridView
+    property real visibilityThreshold: dp(50)   // configurable
+
     // === LOGIQUE MÉTIER INTÉGRÉE (chargement, erreur, comptage) ===
     Logic.CatalogueLogic{
         id: logic
@@ -143,6 +147,18 @@ AppPage {
             // Opacité réduite pendant le chargement, mais visible
             // opacity: logic.loading ? 0.5 : 1.0
 
+            // Timer pour optimiser les calculs de visibilité
+            // Permet d'éviter les calculs excessifs pendant scroll
+            Timer {
+                id: visibilityUpdateTimer
+                interval: 100  // 100ms de délai
+                repeat: false
+                onTriggered: {
+                    // Force la mise à jour des bindings de visibilité
+                    filmGridView.viewportTop = filmGridView.contentY
+                    filmGridView.viewportBottom = filmGridView.contentY + filmGridView.height
+                }
+            }
 
             delegate: Rectangle {
                 width: fixedCardWidth  // Largeur dynamique
@@ -155,10 +171,23 @@ AppPage {
                 // Calcul de visibilité de cet item
                 property real itemTop: y
                 property real itemBottom: y + height
+                property real threshold: cataloguePage.visibilityThreshold
+
+                // Calcul de visibilité optimisé
                 property bool itemVisible: {
-                    var threshold = dp(50) // Seuil de visibilité
-                    return (itemBottom >= filmGridView.viewportTop - threshold) &&
-                           (itemTop <= filmGridView.viewportBottom + threshold)
+                    var top = y
+                    var bottom = y + height
+                    var vpTop = filmGridView.viewportTop
+                    var vpBottom = filmGridView.viewportBottom
+
+                    var visible = (bottom >= vpTop - threshold) && (top <= vpBottom + threshold)
+
+                    // Debug moins verbeux
+                    if (visible !== itemVisible) {
+                        console.log("👁️", modelData ? modelData.title : "Item", visible ? "visible" : "caché")
+                    }
+
+                    return visible
                 }
 
 
@@ -177,6 +206,7 @@ AppPage {
                         // ✅ Configuration lazy loading (activé pour test)
                         enableLazyLoading: true
                         isVisible: parent.parent.itemVisible  // Référence au delegate
+                        visibilityThreshold: cataloguePage.visibilityThreshold
 
                         // Debug pour voir le comportement
                         onIsVisibleChanged: {
@@ -203,8 +233,12 @@ AppPage {
 
             // Mettre à jour viewportTop et viewportBottom sur scroll
             // Mise à jour de la visibilité lors du scroll
+            // Optimisation du scroll
             onContentYChanged: {
-                // Pas besoin de forcer, binding automatique
+                visibilityUpdateTimer.restart()
+            }
+            onHeightChanged: {
+                visibilityUpdateTimer.restart()
             }
         }
     }
