@@ -12,6 +12,14 @@ Item {
     property bool asynchronous: true  // chargement asynchrone: l'image se charge en arrière-plan
     property real borderRadius: dp(6)
 
+    // Nouvelles propriétés pour lazy loading
+    property bool enableLazyLoading: false  // Désactivé par défaut pour ne pas casser l'existant
+    property bool isVisible: true           // Sera contrôlé par le parent (GridView)
+    property real visibilityThreshold: 50   // Distance en pixels avant de charger
+
+    // Propriété calculée pour décider du chargement
+    readonly property bool shouldLoad: !enableLazyLoading || isVisible
+
     // Propriétés de statut (lecture seule)
     readonly property alias status: image.status
     readonly property alias progress: image.progress
@@ -20,14 +28,17 @@ Item {
     readonly property bool isReady: image.status === Image.Ready
 
     Component.onCompleted: {
-        console.log("PosterImage initialisé pour:", source)
+        console.log("PosterImage initialisé pour:", source, " - lazy loading:", enableLazyLoading, " visible:", isVisible)
     }
 
     // Image principale
     Image {
         id: image
         anchors.fill: parent
-        source: posterImage.source
+
+        // Source conditionnelle selon lazy loading
+        source: posterImage.shouldLoad ? posterImage.source : ""
+
         asynchronous: posterImage.asynchronous
         fillMode: Image.PreserveAspectCrop  // Maintient les proportions de l'image
 
