@@ -12,12 +12,15 @@ Item {
     property bool asynchronous: true  // chargement asynchrone: l'image se charge en arrière-plan
     property real borderRadius: dp(6)
 
-    // Nouvelles propriétés pour lazy loading
+    // Permet d'activer ou non le lazy loading
     property bool enableLazyLoading: false  // Désactivé par défaut pour ne pas casser l'existant
+
+    // Indisuq si l'image est visible dans la GridView
     property bool isVisible: true           // Sera contrôlé par le parent (GridView)
     property real visibilityThreshold: 50   // Distance en pixels avant de charger
 
-    // Propriété calculée pour décider du chargement
+    // Propriété calculée pour décider du chargement (si on doit charger
+    // réellement l'image (true si pas de lazy loading ou si l'image est visible)
     readonly property bool shouldLoad: !enableLazyLoading || isVisible
 
     // Propriétés de statut (lecture seule)
@@ -86,23 +89,38 @@ Item {
         id: placeholder
         anchors.fill: parent
         radius: borderRadius
-        visible: isLoading || source === ""  // placeholder visible si image en téléchargement ou source pas définier
 
-        // Fond gris clair uniformisé
-        color: "#f0f0f0"
+        // placeholder visible si image en téléchargement ou source pas défini
+        visible: (isLoading || source === "") || (enableLazyLoading && !shouldLoad)
 
-        // Debug sur les conditions de visibilité du placeholder
-        onVisibleChanged: {
-            console.log("📦 Placeholder visible:", visible)
+        // Couleur différente pour lazy loading vs chargement
+        color: {
+            if (enableLazyLoading && !shouldLoad) {
+                return "#e8e8e8"  // Gris plus foncé pour lazy loading
+            } else {
+                return "#f0f0f0"  // Gris standard pour chargement (fond gris clair uniformisé)
+            }
         }
 
         // Icône cinéma
         AppIcon {
             anchors.centerIn: parent
-            iconType: IconType.film
+
+            // Icône oeil pour les images en attente de lazy loading
+            iconType: enableLazyLoading && !shouldLoad ? IconType.eye : IconType.film
             size: Math.min(parent.width * 0.3, dp(32))  // afin d'éviter les icônes trop grandes
-            color: "#bdbdbd"
+            color: enableLazyLoading && !shouldLoad ? "#999999" : "#bdbdbd"
             z: 2  // Icône cinéma par-dessus le shimmer
+        }
+
+        // ✅ Indicateur lazy loading
+        AppText {
+            anchors.bottom: parent.bottom
+            anchors.right: parent.right
+            anchors.margins: dp(4)
+            text: enableLazyLoading && !shouldLoad ? "💤" : ""
+            font.pixelSize: sp(12)
+            visible: enableLazyLoading && !shouldLoad
         }
 
         // Animation de chargement (shimmer)
@@ -111,7 +129,7 @@ Item {
             width: parent.width * 0.6  // 60% de la largeur seulement
             height: parent.height
             radius: parent.radius
-            visible: isLoading         // uniquement pendant chargement
+            visible: isLoading && shouldLoad  // Pas de shimmer si lazy loading inactif (sur les images en attente)
             z: 1
 
             gradient: Gradient {  // Transparent -> Blanc semi-transparent -> Transparent
@@ -147,8 +165,8 @@ Item {
             // }
 
             PropertyAnimation on x {
-                // animation uniquement quand nécessaire (placeholder visible et image en cours de chargement)
-                running: placeholder.visible && isLoading
+                // animation uniquement quand nécessaire (placeholder visible et image en cours de chargement et lazy loading actif)
+                running: placeholder.visible && isLoading && shouldLoad  // Chargement actif -> affichage du shimmer)
                 from: -shimmer.width * 0.25  // Commence à moitié caché  (// basé sur la largeur du composant)
                 to: placeholder.width   // sort complètement à droite
                 // from: 0   // ← Bord gauche
@@ -173,6 +191,11 @@ Item {
                     console.log("  - running:", running)
                 }
             }
+        }
+
+        // Debug sur les conditions de visibilité du placeholder
+        onVisibleChanged: {
+            console.log("📦 Placeholder visible:", visible)
         }
     }
 
