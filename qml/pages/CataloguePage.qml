@@ -120,7 +120,6 @@ AppPage {
 
         GridView {
             id: filmGridView
-
             anchors.fill: parent
 
             // CellWidth/Height fixes
@@ -131,6 +130,11 @@ AppPage {
 
             // ← CONDITION : visible seulement si pas en chargement ET qu'il y a des films
             visible: !logic.loading && Model.FilmDataSingletonModel.films.length > 0
+
+            // Propriétés pour lazy loading
+            property real itemHeight: cellHeight
+            property real viewportTop: contentY
+            property real viewportBottom: contentY + height
 
             // A décommenter lorsqu'on aura de gros volume de films à afficher
             // cacheBuffer: cellHeight * 2
@@ -148,6 +152,16 @@ AppPage {
                 border.color: Theme.colors.dividerColor
                 border.width: dp(0.5)
 
+                // Calcul de visibilité de cet item
+                property real itemTop: y
+                property real itemBottom: y + height
+                property bool itemVisible: {
+                    var threshold = dp(50) // Seuil de visibilité
+                    return (itemBottom >= filmGridView.viewportTop - threshold) &&
+                           (itemTop <= filmGridView.viewportBottom + threshold)
+                }
+
+
                 property real padding: dp(3)
                 Column {
                     anchors.fill: parent
@@ -155,27 +169,19 @@ AppPage {
                     spacing: dp(4)
 
                     // Zone affiche avec largeur FIXE
-                    // Rectangle {
-                    //     width: parent.width
-                    //     height: parent.width * posterAspectRatio // Respect du ratio cinéma et utilisation de la largeur fixe
-                    //     radius: dp(4)
-                    //     color: {
-                    //         var colors = ["#e3f2fd", "#f3e5f5", "#e8f5e8", "#fff3e0", "#fce4ec"]
-                    //         return colors[index % colors.length]
-                    //     }
-
-                    //     AppText {
-                    //         anchors.centerIn: parent
-                    //         text: "🎬"
-                    //         font.pixelSize: sp(20)
-                    //     }
-                    // }
-
-                    // Zone affiche avec largeur FIXE
                     Components.PosterImage {
                         width: parent.width
                         height: parent.width * posterAspectRatio // Respect du ratio cinéma et utilisation de la largeur fixe
                         source: modelData ? modelData.poster_url : ""
+
+                        // ✅ Configuration lazy loading (activé pour test)
+                        enableLazyLoading: true
+                        isVisible: parent.parent.itemVisible  // Référence au delegate
+
+                        // Debug pour voir le comportement
+                        onIsVisibleChanged: {
+                            console.log("📱 Item", index, "visible:", isVisible, "- Source:", source.split('/').pop())
+                        }
                     }
 
                     // Zone titre (fixe)
@@ -193,6 +199,12 @@ AppPage {
                         elide: Text.ElideRight
                     }
                 }
+            }
+
+            // Mettre à jour viewportTop et viewportBottom sur scroll
+            // Mise à jour de la visibilité lors du scroll
+            onContentYChanged: {
+                // Pas besoin de forcer, binding automatique
             }
         }
     }
