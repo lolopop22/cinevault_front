@@ -4,6 +4,8 @@ import QtQuick.Controls 2.15
 import Qt5Compat.GraphicalEffects
 import "../logic" as Logic
 import "../model" as Model
+import "../components" as Components
+
 
 AppPage {
     id: cataloguePage
@@ -36,6 +38,13 @@ AppPage {
 
     // Calcul de la hauteur des cellules selon le ratio et titre
     readonly property real cellHeight: (fixedCardWidth * posterAspectRatio) + titleHeight
+
+    // Distance en pixels avant de charger image
+    // permet de déterminer l'espace tampon avan/après la zone visible du viewport de la GridView
+    property real visibilityThreshold: dp(50)   // configurable
+
+    // Propriété globale pour activer/désactiver lazy loading
+    property bool enableLazyLoadingGlobal: true
 
     // === LOGIQUE MÉTIER INTÉGRÉE (chargement, erreur, comptage) ===
     Logic.CatalogueLogic{
@@ -77,7 +86,7 @@ AppPage {
                   : logic.hasData
                     ? "Mon Catalogue – " + logic.filmCount + " films"
                     : "Mon Catalogue – Aucun film"
-            font.pixelSize: sp(18)
+            font.pixelSize: sp(16)
             font.bold: true
             color: Theme.colors.textColor
         }
@@ -118,7 +127,6 @@ AppPage {
 
         GridView {
             id: filmGridView
-
             anchors.fill: parent
 
             // CellWidth/Height fixes
@@ -130,6 +138,11 @@ AppPage {
             // ← CONDITION : visible seulement si pas en chargement ET qu'il y a des films
             visible: !logic.loading && Model.FilmDataSingletonModel.films.length > 0
 
+            // Propriétés pour lazy loading
+            property real itemHeight: cellHeight
+            property real viewportTop: contentY
+            property real viewportBottom: contentY + height
+
             // A décommenter lorsqu'on aura de gros volume de films à afficher
             // cacheBuffer: cellHeight * 2
             // reuseItems: true
@@ -137,6 +150,18 @@ AppPage {
             // Opacité réduite pendant le chargement, mais visible
             // opacity: logic.loading ? 0.5 : 1.0
 
+            // Timer pour optimiser les calculs de visibilité
+            // Permet d'éviter les calculs excessifs pendant scroll
+            Timer {
+                id: visibilityUpdateTimer
+                interval: 100  // 100ms de délai
+                repeat: false
+                onTriggered: {
+                    // Force la mise à jour des bindings de visibilité
+                    filmGridView.viewportTop = filmGridView.contentY
+                    filmGridView.viewportBottom = filmGridView.contentY + filmGridView.height
+                }
+            }
 
             delegate: Rectangle {
                 width: fixedCardWidth  // Largeur dynamique
@@ -146,6 +171,29 @@ AppPage {
                 border.color: Theme.colors.dividerColor
                 border.width: dp(0.5)
 
+                // Calcul de visibilité de cet item
+                property real itemTop: y
+                property real itemBottom: y + height
+                property real threshold: cataloguePage.visibilityThreshold
+
+                // Calcul de visibilité optimisé
+                property bool itemVisible: {
+                    var top = y
+                    var bottom = y + height
+                    var vpTop = filmGridView.viewportTop
+                    var vpBottom = filmGridView.viewportBottom
+
+                    var visible = (bottom >= vpTop - threshold) && (top <= vpBottom + threshold)
+
+                    // Debug moins verbeux
+                    if (visible !== itemVisible) {
+                        console.log("👁️", modelData ? modelData.title : "Item", visible ? "visible" : "caché")
+                    }
+
+                    return visible
+                }
+
+
                 property real padding: dp(3)
                 Column {
                     anchors.fill: parent
@@ -153,19 +201,19 @@ AppPage {
                     spacing: dp(4)
 
                     // Zone affiche avec largeur FIXE
-                    Rectangle {
+                    Components.PosterImage {
                         width: parent.width
                         height: parent.width * posterAspectRatio // Respect du ratio cinéma et utilisation de la largeur fixe
-                        radius: dp(4)
-                        color: {
-                            var colors = ["#e3f2fd", "#f3e5f5", "#e8f5e8", "#fff3e0", "#fce4ec"]
-                            return colors[index % colors.length]
-                        }
+                        source: modelData ? modelData.poster_url : ""
 
-                        AppText {
-                            anchors.centerIn: parent
-                            text: "🎬"
-                            font.pixelSize: sp(20)
+                        // Configuration lazy loading (activé pour test)
+                        enableLazyLoading: cataloguePage.enableLazyLoadingGlobal
+                        isVisible: parent.parent.itemVisible  // Référence au delegate
+                        visibilityThreshold: cataloguePage.visibilityThreshold
+
+                        // Debug pour voir le comportement
+                        onIsVisibleChanged: {
+                            console.log("📱 Item", index, "visible:", isVisible, "- Source:", source.split('/').pop())
                         }
                     }
 
@@ -184,6 +232,16 @@ AppPage {
                         elide: Text.ElideRight
                     }
                 }
+            }
+
+            // Mettre à jour viewportTop et viewportBottom sur scroll
+            // Mise à jour de la visibilité lors du scroll
+            // Optimisation du scroll
+            onContentYChanged: {
+                visibilityUpdateTimer.restart()
+            }
+            onHeightChanged: {
+                visibilityUpdateTimer.restart()
             }
         }
     }

@@ -22,3 +22,7 @@ ui_*.h
 # Felgo specific
 *.qmlc
 *.jsc
+
+
+*copie*
+*temp*
