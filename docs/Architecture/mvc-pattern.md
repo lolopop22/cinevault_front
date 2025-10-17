@@ -431,4 +431,4 @@ Button {
 
 - [Architecture générale](overview.md)
 - [Flux de données détaillé](data-flow.md)
-- [CatalogueLogic documentation](../data/CatalogueLogic.md)
+- [CatalogueLogic documentation](../Data/CatalogueLogic.md)

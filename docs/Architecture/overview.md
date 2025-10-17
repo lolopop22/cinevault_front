@@ -190,4 +190,4 @@ Cinevault APP est une application multi-plateforme de gestion de catalogue de fi
 
 - [Pattern MVC détaillé](mvc-pattern.md)
 - [Flux de données complet](data-flow.md)
-- [Guide des composants](../components/README.md)
+- [Guide des composants](../Components/README.md)

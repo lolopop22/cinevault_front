@@ -505,4 +505,4 @@ Vue ←→ Logic ←→ Model  // MAUVAIS
 
 - [Architecture générale](overview.md)
 - [Pattern MVC](mvc-pattern.md)
-- [CatalogueLogic détaillé](../data/CatalogueLogic.md)
+- [CatalogueLogic détaillé](../Data/CatalogueLogic.md)
