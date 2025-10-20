@@ -195,7 +195,71 @@ AppPage {
 
 
                 property real padding: dp(3)
+
+                // ============================================
+                // NOUVEAU : ZONE CLIQUABLE POUR LA NAVIGATION
+                // ============================================
+
+                // MouseArea pour rendre toute la carte cliquable
+
+                MouseArea {
+                    id: cardMouseArea
+                    anchors.fill: parent
+
+                    // Curseur en forme de main pour indiquer que c'est cliquable (desktop)
+                    cursorShape: Qt.PointingHandCursor
+
+                    // Gestionnaire de clic - Navigation vers FilmDetailPage
+                    onClicked: {
+                        console.log("=== NAVIGATION VERS DÉTAILS ===")
+                        console.log("🖱️  Clic sur film:", modelData ? modelData.title : "Inconnu")
+                        console.log("🆔 ID du film:", modelData ? modelData.id : -1)
+
+                        // Validation des données avant navigation
+                        if (!modelData) {
+                            console.error("❌ modelData est null, navigation annulée")
+                            return
+                        }
+
+                        if (!modelData.id || modelData.id <= 0) {
+                            console.error("❌ ID de film invalide:", modelData.id, "- navigation annulée")
+                            return
+                        }
+
+                        // Navigation vers la page de détails
+                        // navigationStack : propriété automatique fournie par NavigationStack
+                        // push(component, properties) : empile une nouvelle page avec propriétés
+                        console.log("🚀 Push vers FilmDetailPage avec filmId:", modelData.id)
+
+                        navigationStack.push(filmDetailPageComponent, {
+                            filmId: modelData.id
+                        })
+
+                        console.log("✅ Navigation déclenchée")
+                        console.log(" ")
+                    }
+
+                    /**
+                     * Feedback visuel lors du press :
+                     * - Opacité réduite à 70% (convention mobile)
+                     * - Scale réduit à 97% (effet de "press" subtil)
+                     * - Animation 100ms (instantané pour l'utilisateur)
+                     * - Easing OutQuad (décélération naturelle)
+                     */
+                    onPressedChanged: {
+                        if (pressed) {
+                            console.log("👇 Press sur:", modelData ? modelData.title : "?")
+                            cardContainer.opacity = 0.7
+                            cardContainer.scale = 0.97
+                        } else {
+                            cardContainer.opacity = 1.0
+                            cardContainer.scale = 1.0
+                        }
+                    }
+                }
+
                 Column {
+                    id: cardContainer
                     anchors.fill: parent
                     anchors.margins: parent.padding
                     spacing: dp(4)
@@ -230,6 +294,38 @@ AppPage {
                         wrapMode: Text.WordWrap
                         maximumLineCount: 2
                         elide: Text.ElideRight
+                    }
+
+                    // ============================================
+                    // TRANSITIONS POUR LE FEEDBACK VISUEL
+                    // ============================================
+
+                    /**
+                     * Transition d'opacité
+                     *
+                     * Propriétés :
+                     * - duration: 100ms (imperceptible comme "lag", perçu comme instantané)
+                     * - easing: InOutQuad (accélération puis décélération douce)
+                     */
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: 100
+                            easing.type: Easing.InOutQuad
+                        }
+                    }
+
+                    /**
+                     * Transition de scale
+                     *
+                     * Propriétés :
+                     * - duration: 100ms (synchronisé avec opacity)
+                     * - easing: OutQuad (décélération douce, plus naturelle)
+                     */
+                    Behavior on scale {
+                        NumberAnimation {
+                            duration: 100
+                            easing.type: Easing.OutQuad
+                        }
                     }
                 }
             }
@@ -332,6 +428,22 @@ AppPage {
                     }
                 }
             }
+        }
+    }
+
+    // ============================================
+    // COMPOSANT DE PAGE DE DÉTAILS (lazy loading)
+    // ============================================
+
+    /**
+     * Component pour la page de détails
+     * Pattern de lazy instantiation (lazy loading)
+     * La page n'est créée qu'au moment du push, économisant mémoire et temps de chargement
+     */
+    Component {
+        id: filmDetailPageComponent
+        FilmDetailPage {
+            // La page sera créée dynamiquement avec les propriétés passées lors du push (filmId)
         }
     }
 
