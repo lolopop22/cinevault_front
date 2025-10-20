@@ -3,7 +3,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import Qt5Compat.GraphicalEffects
 import "../components" as Components
-import "../model" as Model
+import "../logic" as Logic
 
 
 /**
@@ -22,28 +22,26 @@ import "../model" as Model
 FlickablePage {
     id: filmDetailPage
 
+    // ============================================
+    // PROPRIÉTÉ PUBLIQUE - Interface de navigation
+    // ===========================================
     // ID du film à afficher (passé lors du push)
     property int filmId: -1
 
     // ============================================
-    // PROPRIÉTÉS PRIVÉES - État interne
+    // LOGIQUE MÉTIER - Instance de FilmDetailLogic
     // ============================================
-
-    // Film actuellement affiché (récupéré depuis le modèle)
-    property var currentFilm: null
-
-    // Indicateur de chargement des détails
-    property bool loading: false
-
-    // Message d'erreur éventuel
-    property string errorMessage: ""
+    // Bindings automatiques sur logic.currentFilm, logic.loading, logic.errorMessage
+    Logic.FilmDetailLogic {
+        id: logic
+    }
 
     // ============================================
     // CONFIGURATION DE LA BARRE DE NAVIGATION
     // ============================================
 
-    // Titre dynamique basé sur le film
-    title: currentFilm ? currentFilm.title : "Détails du film"
+    // Titre dynamique basé sur le film (binding auto sur logic.currentFilm)
+    title: logic.currentFilm ? logic.currentFilm.title : "Détails du film"
 
     // Bouton retour dans la barre de navigation
     leftBarItem: IconButtonBarItem {
@@ -52,6 +50,10 @@ FlickablePage {
         onClicked: {
             // Retour à la page précédente (CataloguePage)
             console.log("⬅️ Retour au catalogue via NavigationBar")
+
+            // Nettoyage de l'état avant de quitter
+            logic.reset()
+
             navigationStack.pop()
         }
     }
@@ -60,6 +62,7 @@ FlickablePage {
     rightBarItem: IconButtonBarItem {
         iconType: IconType.ellipsisv
         title: "Options"
+        visible: logic.currentFilm !== null
         onClicked: {
             // Futur : afficher un menu d'options
             console.log("⚙️ Options pour le film:", filmId)
@@ -102,7 +105,8 @@ FlickablePage {
                 height: width * 1.5  // Ratio cinéma 2:3
                 anchors.horizontalCenter: parent.horizontalCenter
 
-                source: currentFilm ? currentFilm.poster_url : ""
+                // Binding sur logic.currentFilm (pas d'accès direct au Model)
+                source: logic.currentFilm ? logic.currentFilm.poster_url : ""
                 borderRadius: dp(12)
 
                 // Pas de lazy loading (une seule image, chargement immédiat)
@@ -120,7 +124,10 @@ FlickablePage {
                 // Titre du film
                 AppText {
                     width: parent.width
-                    text: currentFilm ? currentFilm.title : "Film inconnu"
+
+                    // Binding sur logic.currentFilm
+                    text: logic.currentFilm ? logic.currentFilm.title : "Film inconnu"
+
                     font.pixelSize: sp(24)
                     font.bold: true
                     wrapMode: Text.WordWrap
@@ -199,6 +206,22 @@ FlickablePage {
                     }
                 }
             }
+
+            // ============================================
+            // BOUTON RETOUR
+            // ============================================
+
+            AppButton {
+                width: parent.width
+                text: "Retour au catalogue"
+                flat: true
+
+                onClicked: {
+                    console.log("⬅️ Retour au catalogue via bouton")
+                    logic.reset()
+                    navigationStack.pop()
+                }
+            }
         }
     }
 
@@ -218,12 +241,14 @@ FlickablePage {
 
     /**
      * Affichage en cas d'erreur (film non trouvé, ID invalide, etc.)
+     * Binding sur logic.errorMessage
      * Positionné par-dessus le contenu (z-index supérieur)
      */
     Column {
         anchors.centerIn: parent
         spacing: dp(20)
-        visible: errorMessage !== ""
+        // Binding sur logic.errorMessage (pas de logique ici)
+        visible: logic.errorMessage !== ""
         z: 10  // Au-dessus du contenu
 
         AppIcon {
@@ -236,7 +261,8 @@ FlickablePage {
         AppText {
             anchors.horizontalCenter: parent.horizontalCenter
             width: Math.min(dp(300), parent.width * 0.8)
-            text: errorMessage
+            // Binding sur logic.errorMessage
+            text: logic.errorMessage
             font.pixelSize: sp(16)
             wrapMode: Text.WordWrap
             horizontalAlignment: Text.AlignHCenter
@@ -252,6 +278,40 @@ FlickablePage {
                 console.log("⬅️ Retour après erreur")
                 navigationStack.pop()
             }
+        }
+    }
+
+    // ============================================
+    // INITIALISATION - Délégation à la Logic
+    // ============================================
+
+    Component.onCompleted: {
+        console.log("=== DEBUG FilmDetailPage ===")
+        console.log("📄 Page de détails chargée")
+        console.log("🆔 Film ID reçu:", filmId)
+
+        // ✅ DÉLÉGATION À LA LOGIC (pas de logique métier ici)
+        logic.loadFilm(filmId)
+    }
+
+    // ============================================
+    // CONNEXIONS AUX SIGNAUX DE LA LOGIC (optionnel)
+    // ============================================
+
+    /**
+     * Réactions aux signaux de la Logic (toasts de succès ou d'erreur)
+     */
+    Connections {
+        target: logic
+
+        function onFilmLoaded(film) {
+            console.log("🎬 Film chargé avec succès dans la Vue:", film.title)
+            // Futur : Toast de succès
+        }
+
+        function onLoadError(message) {
+            console.log("⚠️ Erreur de chargement reçue dans la Vue:", message)
+            // Futur : Toast d'erreur
         }
     }
 }
