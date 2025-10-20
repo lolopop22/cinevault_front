@@ -12,7 +12,6 @@ import "../model" as Model
 
  * Respect du pattern MVC
  * - Controller/Logic : Orchestre entre Model (FilmDataSingletonModel) et View (FilmDetailPage)
- * - Expose des propriétés readonly et des méthodes publiques
  * - Émet des signaux pour communication avec la Vue
  */
 QtObject {
