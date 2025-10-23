@@ -232,7 +232,7 @@ AppPage {
                         console.log("🚀 Push vers FilmDetailPage avec filmId:", modelData.id)
 
                         navigationStack.push(filmDetailPageComponent, {
-                            filmId: -1
+                            filmId: modelData.id
                         })
 
                         console.log("✅ Navigation déclenchée")

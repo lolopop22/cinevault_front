@@ -241,52 +241,6 @@ FlickablePage {
     }
 
     // ============================================
-    // GESTION D'ERREUR
-    // ============================================
-
-    // /**
-    //  * Affichage en cas d'erreur (film non trouvé, ID invalide, etc.)
-    //  * Binding sur logic.errorMessage
-    //  * Positionné par-dessus le contenu (z-index supérieur)
-    //  */
-    // Column {
-    //     anchors.centerIn: parent
-    //     spacing: dp(20)
-    //     // Binding sur logic.errorMessage (pas de logique ici)
-    //     visible: logic.errorMessage !== ""
-    //     z: 10  // Au-dessus du contenu
-
-    //     AppIcon {
-    //         anchors.horizontalCenter: parent.horizontalCenter
-    //         iconType: IconType.exclamationtriangle
-    //         size: dp(64)
-    //         color: "#FFA500"
-    //     }
-
-    //     AppText {
-    //         anchors.horizontalCenter: parent.horizontalCenter
-    //         width: Math.min(dp(300), parent.width * 0.8)
-    //         // Binding sur logic.errorMessage
-    //         text: logic.errorMessage
-    //         font.pixelSize: sp(16)
-    //         wrapMode: Text.WordWrap
-    //         horizontalAlignment: Text.AlignHCenter
-    //         color: Theme.colors.textColor
-    //     }
-
-    //     AppButton {
-    //         anchors.horizontalCenter: parent.horizontalCenter
-    //         text: "Retour au catalogue"
-    //         backgroundColor: Theme.colors.tintColor
-
-    //         onClicked: {
-    //             console.log("⬅️ Retour après erreur")
-    //             navigationStack.pop()
-    //         }
-    //     }
-    // }
-
-    // ============================================
     // INITIALISATION - Délégation à la Logic
     // ============================================
 
@@ -300,8 +254,8 @@ FlickablePage {
     }
 
     // ============================================
-    // CONNEXIONS AUX SIGNAUX DE LA LOGIC (optionnel)
-    // GESTION DES ERREURS
+    // CONNEXIONS AUX SIGNAUX DE LA LOGIC
+    // (GESTION DES ERREURS, SUCCÈS,...)
     // ============================================
 
     /**

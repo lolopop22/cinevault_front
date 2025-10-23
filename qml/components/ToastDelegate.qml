@@ -3,24 +3,11 @@ import Felgo 4.0
 import Qt5Compat.GraphicalEffects
 
 /**
- * Toast - Composant de notification temporaire
+ * ToastDelegate - Rendu d'un toast dans la ListView
  *
- * Inspiré de Android Material Snackbar et iOS Banner
- * Basé sur : https://gist.github.com/jonmcclung/bae669101d17b103e94790341301c129
+ * Usage interne : Utilisé par ListView du ToastManager
  *
- * Caractéristiques :
- * - Affichage temporaire (auto-dismiss)
- * - Non bloquant (pas de modal)
- * - Animations d'entrée/sortie
- * - File d'attente automatique si plusieurs toasts
- * - Responsive (adapté mobile et desktop)
- *
- * Usage :
- * Toast {
- *     id: myToast
- * }
- *
- * myToast.show("Message d'erreur")
+ * Chaque instance représente un toast de la ListModel
  */
 Rectangle {
     id: toast
@@ -113,7 +100,7 @@ Rectangle {
             color: "white"
             font.pixelSize: sp(14)
             wrapMode: Text.WordWrap
-            maximumLineCount: 3
+            maximumLineCount: 5
             elide: Text.ElideRight
             width: Math.min(implicitWidth, parent.parent.width - dp(96))
             anchors.verticalCenter: parent.verticalCenter
@@ -137,7 +124,7 @@ Rectangle {
     // Timer pour fermeture automatique
     Timer {
         id: hideTimer
-        interval: toast.duration
+        interval: toast.toastDuration
         repeat: false
 
         onTriggered: {
@@ -151,16 +138,11 @@ Rectangle {
     // ============================================
 
     /**
-     * Affiche le toast avec un message (animation fade in)
-     *
-     * @param {string} text - Message à afficher
-     * @param {int} durationMs - Durée optionnelle (par défaut: 3000ms)
+     * Affiche le toast (animation fade in)
      *
      * Justification du flow :
-     * 1. Mise à jour du message
-     * 2. Fade in (opacity 0 → 1)
-     * 3. Slide up (bottomMargin ajusté)
-     * 4. Démarrage du timer d'auto-fermeture
+     * -> Fade in (opacity 0 → 1)
+     * -> Démarrage du timer d'auto-fermeture
      */
     function show() {
         console.log("📣 Toast.show():", toast.toastMessage, "- Type:", toastType)
@@ -172,8 +154,8 @@ Rectangle {
      * Masque le toast avec animation et demande la suppression
      *
      * Justification :
-     * - Fade out progressif (meilleure UX que disparition brutale)
-     * - Auto-destruction si selfDestroying = true
+     * -> Fade out progressif (meilleure UX que disparition brutale)
+     * -> Demande la suppression dans le ListModel
      */
     function hide() {
         console.log("🚫 Toast.hide()")
