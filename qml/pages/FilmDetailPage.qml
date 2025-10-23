@@ -76,6 +76,20 @@ FlickablePage {
     // Configuration du Flickable intégré de FlickablePage
     flickable.contentHeight: contentColumn.height + dp(60)
 
+    // ============================================
+    // TOAST MANAGER (ListView version)
+    // ============================================
+
+    /**
+     * ToastManager avec ListView
+     * - BottomToTop : nouveaux en bas
+     * - displaceAnimation : transition fluide
+     * - interactive: false : pas de scroll
+     */
+    Components.ToastManager {
+        id: toastManager
+    }
+
     // Optionnel : Configuration avancée du flickable
     // flickable.contentWidth: contentColumn.width  // Par défaut = width de la page
     // flickable.flickableDirection: Flickable.VerticalFlick  // Par défaut
@@ -230,47 +244,47 @@ FlickablePage {
     // GESTION D'ERREUR
     // ============================================
 
-    /**
-     * Affichage en cas d'erreur (film non trouvé, ID invalide, etc.)
-     * Binding sur logic.errorMessage
-     * Positionné par-dessus le contenu (z-index supérieur)
-     */
-    Column {
-        anchors.centerIn: parent
-        spacing: dp(20)
-        // Binding sur logic.errorMessage (pas de logique ici)
-        visible: logic.errorMessage !== ""
-        z: 10  // Au-dessus du contenu
+    // /**
+    //  * Affichage en cas d'erreur (film non trouvé, ID invalide, etc.)
+    //  * Binding sur logic.errorMessage
+    //  * Positionné par-dessus le contenu (z-index supérieur)
+    //  */
+    // Column {
+    //     anchors.centerIn: parent
+    //     spacing: dp(20)
+    //     // Binding sur logic.errorMessage (pas de logique ici)
+    //     visible: logic.errorMessage !== ""
+    //     z: 10  // Au-dessus du contenu
 
-        AppIcon {
-            anchors.horizontalCenter: parent.horizontalCenter
-            iconType: IconType.exclamationtriangle
-            size: dp(64)
-            color: "#FFA500"
-        }
+    //     AppIcon {
+    //         anchors.horizontalCenter: parent.horizontalCenter
+    //         iconType: IconType.exclamationtriangle
+    //         size: dp(64)
+    //         color: "#FFA500"
+    //     }
 
-        AppText {
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: Math.min(dp(300), parent.width * 0.8)
-            // Binding sur logic.errorMessage
-            text: logic.errorMessage
-            font.pixelSize: sp(16)
-            wrapMode: Text.WordWrap
-            horizontalAlignment: Text.AlignHCenter
-            color: Theme.colors.textColor
-        }
+    //     AppText {
+    //         anchors.horizontalCenter: parent.horizontalCenter
+    //         width: Math.min(dp(300), parent.width * 0.8)
+    //         // Binding sur logic.errorMessage
+    //         text: logic.errorMessage
+    //         font.pixelSize: sp(16)
+    //         wrapMode: Text.WordWrap
+    //         horizontalAlignment: Text.AlignHCenter
+    //         color: Theme.colors.textColor
+    //     }
 
-        AppButton {
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: "Retour au catalogue"
-            backgroundColor: Theme.colors.tintColor
+    //     AppButton {
+    //         anchors.horizontalCenter: parent.horizontalCenter
+    //         text: "Retour au catalogue"
+    //         backgroundColor: Theme.colors.tintColor
 
-            onClicked: {
-                console.log("⬅️ Retour après erreur")
-                navigationStack.pop()
-            }
-        }
-    }
+    //         onClicked: {
+    //             console.log("⬅️ Retour après erreur")
+    //             navigationStack.pop()
+    //         }
+    //     }
+    // }
 
     // ============================================
     // INITIALISATION - Délégation à la Logic
@@ -287,6 +301,7 @@ FlickablePage {
 
     // ============================================
     // CONNEXIONS AUX SIGNAUX DE LA LOGIC (optionnel)
+    // GESTION DES ERREURS
     // ============================================
 
     /**
@@ -297,12 +312,12 @@ FlickablePage {
 
         function onFilmLoaded(film) {
             console.log("🎬 Film chargé avec succès dans la Vue:", film.title)
-            // Futur : Toast de succès
+            toastManager.showSuccess("Film chargé avec succès !")
         }
 
         function onLoadError(message) {
             console.log("⚠️ Erreur de chargement reçue dans la Vue:", message)
-            // Futur : Toast d'erreur
+            toastManager.showError(message)
         }
     }
 }

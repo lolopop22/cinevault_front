@@ -1,1 +1,3 @@
 PosterImage 1.0 PosterImage.qml
+ToastDelegate 1.0 ToastDelegate.qml
+ToastManager 1.0 ToastManager.qml

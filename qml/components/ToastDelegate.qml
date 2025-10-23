@@ -26,26 +26,30 @@ Rectangle {
     id: toast
 
     // ============================================
-    // PROPRIÉTÉS PUBLIQUES
+    // PROPRIÉTÉS DU DELEGATE
     // ============================================
 
     /**
-     * Durée d'affichage en millisecondes
-     * Par défaut : 3000ms (3 secondes)
-     * Recommandation Material Design : 2000-4000ms
+     * Propriétés reçues du ToastManager
+     *
+     * Justification :
+     * - Delegate reçoit les données du model (message, type, duration)
+     * - Delegate reçoit aussi les configs du manager (colors, icons)
+     * - Sépare les responsabilités :
+     *   * ToastManager = orchestration + config
+     *   * ToastDelegate = affichage + animation
      */
-    property int duration: 3000
+    property string toastMessage: ""
+    property string toastType: "info"
+    property int toastDuration: 3000
+    property color backgroundColor: "#2196F3"  // ou "#323232" (Gris foncé Material) ou #222222 (pour un fond sombre semi-transparent)
+    property string iconType: IconType.infocircle
 
-    // Message à afficher
-    property string message: ""
-
-    // Permet au toast de s'autodétruire après affichage
-    // Utile quand créé dynamiquement par ToastManager
-    property bool selfDestroying: false
-
+    // Signal de fermeture envoyé au manager pour supprimer de la ListModel
+    signal closeRequested()
 
     // ============================================
-    // PROPRIÉTÉS PRIVÉES
+    // PROPRIÉTÉS INTERNES
     // ============================================
 
     // Temps d'animation d'entrée/sortie
@@ -55,20 +59,19 @@ Rectangle {
     // APPARENCE
     // ============================================
 
-    // Taille adaptée au contenu avec limites
-    width: Math.min(messageText.implicitWidth + dp(32), parent.width - dp(32))
-    height: messageText.implicitHeight + dp(24)
-
-    // Positionnement en bas de l'écran (Convention Android/iOS pour toasts)
-    anchors {
-        horizontalCenter: parent.horizontalCenter
-        bottom: parent.bottom
-        bottomMargin: dp(80)  // Au-dessus de la bottom navigation
-    }
-
-    // Style Material Design (fond sombre avec légère transparence)
-    color: "#323232"  // Gris foncé Material (ou #222222 pour un fond sombre semi-transparent)
+    // Taille adaptée au contenu
+    implicitHeight: contentRow.implicitHeight + dp(24)
+    height: implicitHeight
+    color: backgroundColor
     radius: dp(4)
+
+    //  Marge horizontale
+    anchors.horizontalCenter: parent.horizontalCenter
+
+    // Largeur max (responsive)
+    width: Math.min(parent.width - dp(32), contentRow.implicitWidth + dp(32))
+
+    // Opacité pour fade in/out
     opacity: 0  // Invisible par défaut
 
     // Ombre portée pour détacher du fond
@@ -85,18 +88,36 @@ Rectangle {
     // CONTENU
     // ============================================
 
-    AppText {
-        id: messageText
+    Row {
+        id: contentRow
         anchors.centerIn: parent
-        text: toast.message
-        color: "white"
-        font.pixelSize: sp(14)
-        wrapMode: Text.WordWrap
-        maximumLineCount: 3
-        elide: Text.ElideRight
+        spacing: dp(12)
 
-        // Largeur maximale pour éviter un toast trop large
-        width: Math.min(implicitWidth, parent.parent.width - dp(64))
+        /**
+         * Icône selon le type
+         */
+        AppIcon {
+            id: toastIcon
+            iconType: toast.iconType
+            size: dp(20)
+            color: "white"
+            anchors.verticalCenter: parent.verticalCenter
+        }
+
+        /**
+         * Message
+         */
+        AppText {
+            id: messageText
+            text: toast.toastMessage
+            color: "white"
+            font.pixelSize: sp(14)
+            wrapMode: Text.WordWrap
+            maximumLineCount: 3
+            elide: Text.ElideRight
+            width: Math.min(implicitWidth, parent.parent.width - dp(96))
+            anchors.verticalCenter: parent.verticalCenter
+        }
     }
 
 
@@ -104,7 +125,7 @@ Rectangle {
     // ANIMATIONS
     // ============================================
 
-    // Comportement d'animation de l'opacité
+    // Comportement d'animation d'opacité (fade in/out)
     // Utilisé pour l'entrée et la sortie
     Behavior on opacity {
         NumberAnimation {
@@ -113,18 +134,6 @@ Rectangle {
         }
     }
 
-    // Animation d'entrée (slide up + fade in)
-    Behavior on anchors.bottomMargin {
-        NumberAnimation {
-            duration: toast.fadeTime
-            easing.type: Easing.OutQuad
-        }
-    }
-
-    // ============================================
-    // TIMER D'AUTO-FERMETURE
-    // ============================================
-
     // Timer pour fermeture automatique
     Timer {
         id: hideTimer
@@ -132,7 +141,7 @@ Rectangle {
         repeat: false
 
         onTriggered: {
-            console.log("⏱️ Toast auto-hide après", toast.duration, "ms")
+            console.log("⏱️ Toast auto-hide après", toast.duration, "ms", "| toast message: ", toast.toastMessage)
             toast.hide()
         }
     }
@@ -142,7 +151,7 @@ Rectangle {
     // ============================================
 
     /**
-     * Affiche le toast avec un message
+     * Affiche le toast avec un message (animation fade in)
      *
      * @param {string} text - Message à afficher
      * @param {int} durationMs - Durée optionnelle (par défaut: 3000ms)
@@ -153,26 +162,14 @@ Rectangle {
      * 3. Slide up (bottomMargin ajusté)
      * 4. Démarrage du timer d'auto-fermeture
      */
-    function show(text, durationMs) {
-        console.log("📣 Toast.show():", text)
-
-        // Mise à jour du message
-        message = text
-
-        // Mise à jour de la durée si fournie
-        if (typeof durationMs !== "undefined" && durationMs > 0) {
-            duration = Math.max(durationMs, 2 * fadeTime)  // Minimum = 2x fadeTime
-        }
-
-        // Animation d'entrée
-        opacity = 1.0
-
-        // Démarrage du timer d'auto-fermeture
-        hideTimer.restart()
+    function show() {
+        console.log("📣 Toast.show():", toast.toastMessage, "- Type:", toastType)
+        opacity = 1.0 // pour l'animation d'entrée
+        hideTimer.start()
     }
 
     /**
-     * Masque le toast avec animation
+     * Masque le toast avec animation et demande la suppression
      *
      * Justification :
      * - Fade out progressif (meilleure UX que disparition brutale)
@@ -184,12 +181,10 @@ Rectangle {
         // Animation de sortie
         opacity = 0
 
-        // Auto-destruction après animation si demandé
-        if (selfDestroying) {
-            Qt.callLater(function() {
-                toast.destroy(fadeTime)
-            })
-        }
+        // Après l'animation de fade, notifier le manager
+        Qt.callLater(function() {
+            closeRequested()  // Signal → manager → ListModel.remove()
+        }, fadeTime)
     }
 
     // ============================================
@@ -198,5 +193,6 @@ Rectangle {
 
     Component.onCompleted: {
         console.log("✅ Toast initialisé")
+        show()  // Fade in automatique
     }
 }
