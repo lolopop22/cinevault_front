@@ -5,6 +5,7 @@ import Qt5Compat.GraphicalEffects
 import "../logic" as Logic
 import "../model" as Model
 import "../components" as Components
+import "../services" as Services
 
 
 AppPage {
@@ -343,93 +344,93 @@ AppPage {
     }
 
 
-    // === MODAL D'ERREUR EN BAS DE FENÊTRE ===
-    AppModal {
-        id: errorModal
+    // // === MODAL D'ERREUR EN BAS DE FENÊTRE ===
+    // AppModal {
+    //     id: errorModal
 
-        // Configuration modal partiel en bas
-        fullscreen: false
-        modalHeight: dp(150)
+    //     // Configuration modal partiel en bas
+    //     fullscreen: false
+    //     modalHeight: dp(150)
 
-        // Positionnement en bas (via ancrage du contenu)
-        pushBackContent: cataloguePage
+    //     // Positionnement en bas (via ancrage du contenu)
+    //     pushBackContent: cataloguePage
 
-        // Fermeture par tap externe
-        closeOnBackgroundClick: true
-        closeWithBackButton: true
+    //     // Fermeture par tap externe
+    //     closeOnBackgroundClick: true
+    //     closeWithBackButton: true
 
-        // Couleur de fond du modal
-        backgroundColor: "transparent"
+    //     // Couleur de fond du modal
+    //     backgroundColor: "transparent"
 
-        // === CONTENU DU MODAL D'ERREUR ===
-        Rectangle {
-            id: modalContainer
-            width: Math.min(dp(350), parent.width * 0.9)   // largeur contrôlée et responsive
-            height: parent.height
+    //     // === CONTENU DU MODAL D'ERREUR ===
+    //     Rectangle {
+    //         id: modalContainer
+    //         width: Math.min(dp(350), parent.width * 0.9)   // largeur contrôlée et responsive
+    //         height: parent.height
 
-            // Ancré en bas avec marge pour le décaler vers le haut
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: dp(40)
+    //         // Ancré en bas avec marge pour le décaler vers le haut
+    //         anchors.horizontalCenter: parent.horizontalCenter
+    //         anchors.bottom: parent.bottom
+    //         anchors.bottomMargin: dp(40)
 
-            radius: dp(12)
-            color: Theme.colors.backgroundColor
+    //         radius: dp(12)
+    //         color: Theme.colors.backgroundColor
 
-            layer.enabled: true
-            layer.effect: DropShadow {
-                horizontalOffset: 0
-                verticalOffset: dp(4)
-                radius: dp(8)
-                samples: 17
-                color: Qt.rgba(0, 0, 0, 0.3)
-            }
+    //         layer.enabled: true
+    //         layer.effect: DropShadow {
+    //             horizontalOffset: 0
+    //             verticalOffset: dp(4)
+    //             radius: dp(8)
+    //             samples: 17
+    //             color: Qt.rgba(0, 0, 0, 0.3)
+    //         }
 
-            Column {
-                anchors.fill: parent
-                anchors.margins: dp(10)
-                spacing: dp(12)
+    //         Column {
+    //             anchors.fill: parent
+    //             anchors.margins: dp(10)
+    //             spacing: dp(12)
 
-                AppIcon {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    iconType: IconType.exclamationtriangle
-                    color: "#FFA500"
-                    size: dp(24)
-                }
+    //             AppIcon {
+    //                 anchors.horizontalCenter: parent.horizontalCenter
+    //                 iconType: IconType.exclamationtriangle
+    //                 color: "#FFA500"
+    //                 size: dp(24)
+    //             }
 
-                AppText {
-                    id: errorText
-                    width: parent.width
-                    text: ""
-                    color: Theme.colors.textColor
-                    font.pixelSize: sp(14)
-                    wrapMode: Text.WordWrap
-                    horizontalAlignment: Text.AlignHCenter
-                    maximumLineCount: 4
-                }
+    //             AppText {
+    //                 id: errorText
+    //                 width: parent.width
+    //                 text: ""
+    //                 color: Theme.colors.textColor
+    //                 font.pixelSize: sp(14)
+    //                 wrapMode: Text.WordWrap
+    //                 horizontalAlignment: Text.AlignHCenter
+    //                 maximumLineCount: 4
+    //             }
 
-                Row {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    spacing: dp(20)
+    //             Row {
+    //                 anchors.horizontalCenter: parent.horizontalCenter
+    //                 spacing: dp(20)
 
-                    AppButton {
-                        text: "Rejeter"
-                        flat: true
-                        textColor: Theme.colors.secondaryTextColor
-                        onClicked: errorModal.close()
-                    }
+    //                 AppButton {
+    //                     text: "Rejeter"
+    //                     flat: true
+    //                     textColor: Theme.colors.secondaryTextColor
+    //                     onClicked: errorModal.close()
+    //                 }
 
-                    AppButton {
-                        text: "Rafraîchir"
-                        backgroundColor: Theme.colors.tintColor
-                        onClicked: {
-                            // errorModal.close()
-                            logic.refreshCatalogue()
-                        }
-                    }
-                }
-            }
-        }
-    }
+    //                 AppButton {
+    //                     text: "Rafraîchir"
+    //                     backgroundColor: Theme.colors.tintColor
+    //                     onClicked: {
+    //                         // errorModal.close()
+    //                         logic.refreshCatalogue()
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
     // ============================================
     // COMPOSANT DE PAGE DE DÉTAILS (lazy loading)
@@ -451,8 +452,8 @@ AppPage {
     Connections {
         target: logic
         function onErrorOccurred(message) {
-            errorText.text = message
-            errorModal.open()
+            console.log("⚠️ Erreur reçue dans la vue CataloguePage:", message)
+            Services.ToastService.showError(message)
         }
     }
 

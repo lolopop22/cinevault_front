@@ -3,6 +3,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import Qt5Compat.GraphicalEffects
 import "../components" as Components
+import "../services" as Services
 import "../logic" as Logic
 
 
@@ -18,6 +19,7 @@ import "../logic" as Logic
  * - Afficher le poster et le titre (validation visuelle)
  * - Gérer les erreurs de navigation
  * - Valider les transitions de navigation
+ * Utilise ToastService pour afficher les notifications
  */
 FlickablePage {
     id: filmDetailPage
@@ -76,19 +78,19 @@ FlickablePage {
     // Configuration du Flickable intégré de FlickablePage
     flickable.contentHeight: contentColumn.height + dp(60)
 
-    // ============================================
-    // TOAST MANAGER (ListView version)
-    // ============================================
+    // // ============================================
+    // // TOAST MANAGER (ListView version)
+    // // ============================================
 
-    /**
-     * ToastManager avec ListView
-     * - BottomToTop : nouveaux en bas
-     * - displaceAnimation : transition fluide
-     * - interactive: false : pas de scroll
-     */
-    Components.ToastManager {
-        id: toastManager
-    }
+    // /**
+    //  * ToastManager avec ListView
+    //  * - BottomToTop : nouveaux en bas
+    //  * - displaceAnimation : transition fluide
+    //  * - interactive: false : pas de scroll
+    //  */
+    // Components.ToastManager {
+    //     id: toastManager
+    // }
 
     // Optionnel : Configuration avancée du flickable
     // flickable.contentWidth: contentColumn.width  // Par défaut = width de la page
@@ -241,6 +243,34 @@ FlickablePage {
     }
 
     // ============================================
+    // GESTION DES TOASTS VIA TOASTSERVICE
+    // ============================================
+
+    /**
+     * Connexions aux signaux de la Logic
+     *
+     * Utilisation de ToastService :
+     * - Services.ToastService.XXX
+     * - Pas de dépendance sur "app"
+     * - Singleton QML (protection duplication)
+     * - Testable (peut être mocké)
+     */
+    Connections {
+        target: logic
+
+        function onFilmLoaded(film) {
+            console.log("🎬 Film chargé avec succès dans la Vue:", film.title)
+            Services.ToastService.showSuccess("Film chargé avec succès !")
+        }
+
+        function onLoadError(message) {
+            console.log("⚠️ Erreur de chargement reçue dans la Vue:", message)
+            Services.ToastService.showError(message)
+        }
+    }
+
+
+    // ============================================
     // INITIALISATION - Délégation à la Logic
     // ============================================
 
@@ -251,27 +281,5 @@ FlickablePage {
 
         // ✅ DÉLÉGATION À LA LOGIC (pas de logique métier ici)
         logic.loadFilm(filmId)
-    }
-
-    // ============================================
-    // CONNEXIONS AUX SIGNAUX DE LA LOGIC
-    // (GESTION DES ERREURS, SUCCÈS,...)
-    // ============================================
-
-    /**
-     * Réactions aux signaux de la Logic (toasts de succès ou d'erreur)
-     */
-    Connections {
-        target: logic
-
-        function onFilmLoaded(film) {
-            console.log("🎬 Film chargé avec succès dans la Vue:", film.title)
-            toastManager.showSuccess("Film chargé avec succès !")
-        }
-
-        function onLoadError(message) {
-            console.log("⚠️ Erreur de chargement reçue dans la Vue:", message)
-            toastManager.showError(message)
-        }
     }
 }
