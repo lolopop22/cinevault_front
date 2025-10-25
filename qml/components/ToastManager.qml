@@ -1,30 +1,53 @@
-import QtQuick 2.15
 import Felgo 4.0
+import QtQuick 2.15
+import QtQuick.Controls 2.15
 
 /**
- * ToastManager v2 - Avec ListView
+ * ToastManager - Gestionnaire visuel de notifications toast
  *
- * Avantages :
- * - VerticalLayoutDirection.BottomToTop natif
- * - displaceAnimation automatique
- * - Model-driven (efficace)
- * - Pattern Qt standard (ListView)
+ * ⚠️ Ce n'est PAS un Singleton (pas de pragma Singleton)
+ *
+ * Architecture :
+ * - Composant visuel (ListView, Rectangle, animations)
+ * - Instance unique créée dans Main.qml
+ * - Accessible via ToastService (Singleton)
+ *
+ * Responsabilités :
+ * - Gérer la ListView des toasts (Model-driven (efficace))
+ * - Animer les entrées/sorties (displaceAnimation automatique)
+ * - Empiler les toasts (BottomToTop: VerticalLayoutDirection.BottomToTop natif)
+ *
+ * Justification :
+ * - Composants visuels ont besoin d'un parent
+ * - Singletons QML n'ont pas de parent automatique
+ * - Solution : Instance + Service Singleton
+ *
+ * Références :
+ * - Qt 6.7 docs: "Singletons are ideal for styling or theming"
+ * - Qt 6.5+: "Use singletons instead of context properties"
+ * - QML Guide: "Singleton useful for services"
  *
  * Usage :
- * toastManager.show("Erreur", "error")
- * toastManager.showSuccess("Succès !")
+ * import "../components" as Components
+ *
+ * Components.ToastManager.showError("Erreur")
+ * Components.ToastManager.showSuccess("Succès")
+
+ * Note importante : dp() et sp() ne sont pas disponibles dans les Singletons
+ * Solution : Utiliser Theme.dp() et Theme.sp() à la place
  */
 Item {
     id: toastManager
+
     anchors.fill: parent
     z: Infinity
 
     // ============================================
-    // CONFIGURATION DU LISTMODEL
+    // MODÈLE DE DONNÉES - Stockage des toasts
     // ============================================
 
     /**
-     * ListModel pour stocker les toasts
+     * ListModel pour stocker les toasts actifs
      *
      * Chaque toast est un objet :
      * {
@@ -43,7 +66,7 @@ Item {
     }
 
     // ============================================
-    // DÉFINITION DES TYPES ET COULEURS
+    // CONFIGURATION DES TYPES
     // ============================================
 
     /**
@@ -58,13 +81,13 @@ Item {
 
     /**
      * Configuration des couleurs par type
-     * Material Design colors
+     * Couleurs Material Design
      */
     readonly property var toastColors: {
-        "success": "#4CAF50",   // Vert
-        "error": "#F44336",     // Rouge
-        "warning": "#FF9800",   // Orange
-        "info": "#2196F3"       // Bleu
+        "success": "#4CAF50",   // Green 500
+        "error": "#F44336",     // Red 500
+        "warning": "#FF9800",   // Orange 500
+        "info": "#2196F3"       // Blue 500
     }
 
     /**
@@ -100,13 +123,20 @@ Item {
         anchors {
             left: parent.left
             right: parent.right
-            bottom: parent.bottom
-            bottomMargin: dp(80)  // Au-dessus de la bottom navigation
+            bottom: parent.bottom  // Bas du VIEWPORT
+
+            /**
+             * Marge en bas : 80dp
+             *
+             * Justification :
+             * - Au-dessus de la bottom navigation (48dp)
+             * - Marge supplémentaire (32dp) pour éviter chevauchement
+             * - Total : 80dp (convention Material Design)
+             */
+            bottomMargin: Theme.dp(80)
         }
 
-        /**
-         * Hauteur = somme des hauteurs des toasts + espacements
-         */
+        // Hauteur = somme des hauteurs des toasts + espacements
         height: contentHeight
 
         // ============================================
@@ -137,19 +167,20 @@ Item {
         /**
          * Espacement entre toasts
          */
-        spacing: dp(8)
+        spacing: Theme.dp(8)
 
         /**
          * Animation de déplacement
          *
-         * - Quand un toast disparaît, les autres se déplacent
-         * - displaceAnimation assure une transition fluide
+         * - Quand un toast disparaît remove), les autres se déplacent
+         * - displaced assure une transition fluide
          * - Sans ça : saut abrupt vers le bas
          * - Avec ça : glissement animé (meilleure UX)
          *
          * Properties :
-         * - duration : Temps de l'animation (250ms recommandé)
-         * - easing : Courbe d'accélération (OutQuad = naturel)
+         * - y : Position verticale (seule propriété animée)
+         * - duration : 250ms (ni trop lent, ni trop rapide)
+         * - easing : OutQuad (décélération douce, naturelle)
          */
         displaced: Transition {
             NumberAnimation {
@@ -167,7 +198,7 @@ Item {
          * Delegate : Définit l'apparence d'un toast
          *
          * Chaque toast du model est rendu avec ce delegate
-         * Accès aux propriétés du model via :
+         * Accès aux propriétés du model via model.XXX:
          * - model.message
          * - model.type
          * - model.duration
@@ -207,6 +238,13 @@ Item {
      * @param {string} text - Message à afficher
      * @param {string} type - Type (success, error, warning, info)
      * @param {int} duration - Durée en ms (optionnel, défaut 3000)
+     *
+     * Flow :
+     * 1. Validation des paramètres (valeurs par défaut)
+     * 2. Ajout au ListModel (append)
+     * 3. ListView crée automatiquement le delegate
+     * 4. ToastDelegate s'affiche avec animation
+     * 5. Timer démarre (auto-hide après duration)
      */
     function show(text, type, duration) {
         // Défaut : info
@@ -219,7 +257,7 @@ Item {
             duration = 3000
         }
 
-        console.log("📣 ToastManager.show():", text, "- Type:", type)
+        console.log("📣 ToastManager Singleton.show():", text, "- Type:", type)
 
         // Ajout à la ListModel
         // BottomToTop signifie : le nouvel item est ajouté comme le DERNIER
@@ -252,11 +290,9 @@ Item {
         return show(text, toastType.INFO, duration)
     }
 
-    // ============================================
-    // INITIALISATION
-    // ============================================
-
     Component.onCompleted: {
-        console.log("✅ ToastManager initialisé (ListView version)")
+        console.log("✅ ToastManager initialisé")
+        console.log("📍 Parent:", parent)
+        console.log("📐 Taille:", width, "x", height)
     }
 }

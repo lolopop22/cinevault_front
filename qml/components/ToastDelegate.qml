@@ -3,11 +3,15 @@ import Felgo 4.0
 import Qt5Compat.GraphicalEffects
 
 /**
- * ToastDelegate - Rendu d'un toast dans la ListView
+ * ToastDelegate - Rendu visuel d'un toast individuel
  *
- * Usage interne : Utilisé par ListView du ToastManager
+ * Responsabilités :
+ * - Afficher le message avec icône et couleur
+ * - Animer l'entrée (fade in)
+ * - Animer la sortie (fade out)
+ * - Auto-hide après durée définie
  *
- * Chaque instance représente un toast de la ListModel
+ * Usage interne uniquement (par ToastManager)
  */
 Rectangle {
     id: toast
@@ -46,22 +50,35 @@ Rectangle {
     // APPARENCE
     // ============================================
 
-    // Taille adaptée au contenu
+    // Taille adaptée au contenu + padding
     implicitHeight: contentRow.implicitHeight + dp(24)
     height: implicitHeight
     color: backgroundColor
     radius: dp(4)
 
     //  Marge horizontale
-    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.horizontalCenter: parent ? parent.horizontalCenter : undefined
 
-    // Largeur max (responsive)
-    width: Math.min(parent.width - dp(32), contentRow.implicitWidth + dp(32))
+    /**
+     * Largeur responsive
+     * - Min : Ajuste au contenu + padding
+     * - Max : Largeur parent - marges
+     */
+    width: Math.min(
+        parent ? parent.width - Theme.dp(32) : 300,
+        contentRow.implicitWidth + Theme.dp(32)
+    )
 
     // Opacité pour fade in/out
     opacity: 0  // Invisible par défaut
 
-    // Ombre portée pour détacher du fond
+    /**
+     * Ombre portée pour détacher visuellement
+     *
+     * Justification :
+     * - Donne de la profondeur (Material Design elevation)
+     * - Améliore la lisibilité sur fonds clairs/foncés
+     */
     layer.enabled: true
     layer.effect: DropShadow {
         horizontalOffset: 0
@@ -102,7 +119,15 @@ Rectangle {
             wrapMode: Text.WordWrap
             maximumLineCount: 5
             elide: Text.ElideRight
-            width: Math.min(implicitWidth, parent.parent.width - dp(96))
+
+            /**
+             * Largeur max pour éviter un toast trop large
+             */
+            width: Math.min(
+                implicitWidth,
+                (parent.parent.parent ? parent.parent.parent.width : 300) - Theme.dp(96)
+            )
+
             anchors.verticalCenter: parent.verticalCenter
         }
     }
@@ -112,8 +137,14 @@ Rectangle {
     // ANIMATIONS
     // ============================================
 
-    // Comportement d'animation d'opacité (fade in/out)
-    // Utilisé pour l'entrée et la sortie
+    /**
+     * Behavior sur opacity : fade in/out
+     *
+     * Justification :
+     * - Apparition progressive (pas brutal)
+     * - Disparition douce (pas brusque)
+     * - 300ms = sweet spot (ni trop lent, ni trop rapide)
+     */
     Behavior on opacity {
         NumberAnimation {
             duration: toast.fadeTime
@@ -174,7 +205,7 @@ Rectangle {
     // ============================================
 
     Component.onCompleted: {
-        console.log("✅ Toast initialisé")
+        console.log("✅ ToastDelegate créé:", toastMessage, "- Type:", toastType)
         show()  // Fade in automatique
     }
 }

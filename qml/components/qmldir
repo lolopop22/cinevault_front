@@ -1,3 +1,9 @@
+# PosterImage - Composant d'affichage de poster avec lazy loading
 PosterImage 1.0 PosterImage.qml
+
+# ToastDelegate - Rendu d'un toast individuel (usage interne)
 ToastDelegate 1.0 ToastDelegate.qml
+
+# ToastManager - Gestionnaire visuel de toasts (usage interne)
+# /!\ Ne PAS instancier directement, utiliser ToastService
 ToastManager 1.0 ToastManager.qml
