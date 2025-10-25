@@ -40,6 +40,74 @@ Rectangle {
     signal closeRequested()
 
     // ============================================
+    // LARGEUR ADAPTATIVE
+    // ============================================
+
+    /**
+     * Calcul de la largeur maximale selon plateforme et taille d'écran
+     *
+     * Guidelines :
+     *
+     * Material Design (Android) :
+     * - Mobile : Largeur écran - 32dp (16dp de chaque côté)
+     * - Tablet : Maximum 344dp (single-line) ou 456dp (multi-line)
+     * - Source : https://m3.material.io/components/snackbar/specs
+     *
+     * iOS :
+     * - iPhone : Largeur écran - marges standard
+     * - iPad : Maximum ~400-500pt (centré)
+     * - Source : https://developer.apple.com/design/human-interface-guidelines/alerts
+     *
+     * Desktop :
+     * - Maximum : 360px (convention standard)
+     * - Pas de pleine largeur (mauvaise UX)
+     *
+     * Détection :
+     * - Taille écran : parent.width
+     * - Plateforme : Qt.platform.os
+     * - Breakpoint tablet : 600dp (convention Material)
+     */
+    readonly property real maxToastWidth: {
+        var screenWidth = parent ? parent.width : 300
+
+        // IOS
+        if (Qt.platform.os === "ios") {
+            // iPad (largeur > 600dp)
+            if (screenWidth > Theme.dp(600)) {
+                // iPad : Max 500pt
+                return Math.min(Theme.dp(500), screenWidth - Theme.dp(32))
+            }
+
+            // iPhone : Largeur écran - marges
+            return screenWidth - Theme.dp(32)
+        }
+
+        // ANDROID
+        if (Qt.platform.os === "android") {
+            // Tablet (largeur > 600dp)
+            if (screenWidth > Theme.dp(600)) {
+                // Tablet : Max 456dp (multi-line snackbar)
+                // Note : 344dp pour single-line, 456dp pour multi-line
+                return Math.min(Theme.dp(456), screenWidth - Theme.dp(32))
+            }
+
+            // Mobile : Largeur écran - 32dp
+            return screenWidth - Theme.dp(32)
+        }
+
+        // DESKTOP (Windows, macOS, Linux)
+        if (Qt.platform.os === "windows" ||
+            Qt.platform.os === "osx" ||
+            Qt.platform.os === "linux") {
+            // Desktop : Max 360dp (convention UX)
+            return Math.min(Theme.dp(360), screenWidth - Theme.dp(32))
+        }
+
+        // Fallback : Max 360dp
+        return Math.min(Theme.dp(360), screenWidth - Theme.dp(32))
+    }
+
+    // ============================================
     // PROPRIÉTÉS INTERNES
     // ============================================
 
@@ -56,18 +124,24 @@ Rectangle {
     color: backgroundColor
     radius: dp(4)
 
-    //  Marge horizontale
+    // Centrage horizontal
     anchors.horizontalCenter: parent ? parent.horizontalCenter : undefined
 
     /**
-     * Largeur responsive
-     * - Min : Ajuste au contenu + padding
-     * - Max : Largeur parent - marges
+     * Largeur responsive avec maximum (Respect des largeurs max par plateforme)
+     *
+     * Logic :
+     * 1. maxToastWidth = largeur max selon plateforme
+     * 2. contentRow.implicitWidth + padding = largeur naturelle du contenu
+     * 3. Math.min() = prend le plus petit (ne dépasse jamais maxToastWidth)
+     *
+     * Exemples :
+     * - Message court (50dp contenu) + iPhone : 50dp + 32dp = 82dp
+     * - Message long (600dp contenu) + iPhone (375dp) : max 343dp
+     * - Message long (600dp contenu) + iPad (768dp) : max 500dp
+     * - Message long (600dp contenu) + Desktop : max 360dp
      */
-    width: Math.min(
-        parent ? parent.width - Theme.dp(32) : 300,
-        contentRow.implicitWidth + Theme.dp(32)
-    )
+    width: Math.min(toast.maxToastWidth, contentRow.implicitWidth + Theme.dp(32))
 
     // Opacité pour fade in/out
     opacity: 0  // Invisible par défaut
@@ -121,11 +195,21 @@ Rectangle {
             elide: Text.ElideRight
 
             /**
-             * Largeur max pour éviter un toast trop large
+             * Largeur max du texte
+             *
+             * Calcul :
+             * - maxToastWidth - padding (32dp) - icône (20dp) - spacing (12dp)
+             * - Total padding/icône : ~64dp
+             * - Largeur texte = maxToastWidth - 64dp
+             *
+             * Justification :
+             * - Empêche le texte de dépasser le toast
+             * - Garde des marges internes cohérentes
+             * - Permet word wrap si texte trop long
              */
             width: Math.min(
                 implicitWidth,
-                (parent.parent.parent ? parent.parent.parent.width : 300) - Theme.dp(96)
+                toast.maxToastWidth - Theme.dp(64)
             )
 
             anchors.verticalCenter: parent.verticalCenter
@@ -206,6 +290,10 @@ Rectangle {
 
     Component.onCompleted: {
         console.log("✅ ToastDelegate créé:", toastMessage, "- Type:", toastType)
+        console.log("📱 Plateforme:", Qt.platform.os)
+        console.log("📐 Largeur écran:", parent ? parent.width : "?", "px")
+        console.log("📏 Largeur max toast:", maxToastWidth, "px")
+        console.log("📊 Largeur réelle toast:", width, "px")
         show()  // Fade in automatique
     }
 }

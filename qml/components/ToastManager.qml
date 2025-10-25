@@ -66,6 +66,60 @@ Item {
     }
 
     // ============================================
+    // MARGE ADAPTATIVE PAR PLATEFORME
+    // ============================================
+
+    /**
+     * Calcul de la marge en bas selon la plateforme
+     *
+     * Justifications :
+     *
+     * iOS :
+     * - Tab Bar : 49dp + safe area bottom
+     * - Convention iOS HIG : Toast au-dessus du Tab Bar
+     * - Marge : 80dp (Tab Bar 49dp + espace 31dp)
+     * - Source : https://developer.apple.com/design/human-interface-guidelines/tab-bars
+     *
+     * Android :
+     * - Bottom Navigation : 56dp
+     * - Convention Material : Snackbar à 16dp du bas
+     * - Mais au-dessus de Bottom Nav si présente
+     * - Marge : 72dp (Bottom Nav 56dp + espace 16dp)
+     * - (bon on va dminuer un peu hein...)
+     * - Source : https://m3.material.io/components/snackbar/specs
+     *
+     * Desktop :
+     * - Pas de bottom navigation (nav latérale ou top)
+     * - Convention : Toast en bas avec petite marge
+     * - Marge : 16dp (marge standard)
+     *
+     * Détection de plateforme :
+     * - Qt.platform.os : "ios", "android", "windows", "osx", "linux"
+     */
+    readonly property real adaptiveBottomMargin: {
+        // iOS : 80dp (au-dessus du Tab Bar)
+        if (Qt.platform.os === "ios") {
+            return Theme.dp(80)
+        }
+
+        // Android : 72dp (au-dessus de la Bottom Navigation)
+        if (Qt.platform.os === "android") {
+            return Theme.dp(50)
+        }
+
+        // Desktop (Windows, macOS, Linux) : 16dp
+        // Pas de bottom navigation sur desktop
+        if (Qt.platform.os === "windows" ||
+            Qt.platform.os === "osx" ||
+            Qt.platform.os === "linux") {
+            return Theme.dp(16)
+        }
+
+        // Fallback : 16dp (sécurité)
+        return Theme.dp(16)
+    }
+
+    // ============================================
     // CONFIGURATION DES TYPES
     // ============================================
 
@@ -125,15 +179,7 @@ Item {
             right: parent.right
             bottom: parent.bottom  // Bas du VIEWPORT
 
-            /**
-             * Marge en bas : 80dp
-             *
-             * Justification :
-             * - Au-dessus de la bottom navigation (48dp)
-             * - Marge supplémentaire (32dp) pour éviter chevauchement
-             * - Total : 80dp (convention Material Design)
-             */
-            bottomMargin: Theme.dp(80)
+            bottomMargin: toastManager.adaptiveBottomMargin
         }
 
         // Hauteur = somme des hauteurs des toasts + espacements
@@ -213,7 +259,7 @@ Item {
              * - Découplage : delegate ne connaît pas toastType.ERROR, etc.
              * - Facilite les modifications futures (ex: changer les couleurs)
              */
-            width: toastList.width
+            // width: toastList.width  // on laisse ToastDelegate gérer sa largeur
             toastMessage: model.message
             toastType: model.type
             toastDuration: model.duration
