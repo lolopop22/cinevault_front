@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import Felgo 4.0
 import "../model" as Model
+import "../services" as Services
 
 Item {
     id: catalogueLogic
@@ -15,7 +16,7 @@ Item {
     signal errorOccurred(string message)
 
     // Instance du service HTTP
-    Model.FilmService {
+    Services.FilmService {
         id: filmService
         apiUrl: "https://localhost:8000/api"
     }

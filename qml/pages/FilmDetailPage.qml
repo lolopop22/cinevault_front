@@ -78,24 +78,6 @@ FlickablePage {
     // Configuration du Flickable intégré de FlickablePage
     flickable.contentHeight: contentColumn.height + dp(60)
 
-    // // ============================================
-    // // TOAST MANAGER (ListView version)
-    // // ============================================
-
-    // /**
-    //  * ToastManager avec ListView
-    //  * - BottomToTop : nouveaux en bas
-    //  * - displaceAnimation : transition fluide
-    //  * - interactive: false : pas de scroll
-    //  */
-    // Components.ToastManager {
-    //     id: toastManager
-    // }
-
-    // Optionnel : Configuration avancée du flickable
-    // flickable.contentWidth: contentColumn.width  // Par défaut = width de la page
-    // flickable.flickableDirection: Flickable.VerticalFlick  // Par défaut
-
     // ============================================
     // CONTENU SCROLLABLE (enfants directs de FlickablePage)
     // ============================================

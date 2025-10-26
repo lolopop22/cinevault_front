@@ -1,2 +1,5 @@
 # ToastService - Service global de notifications toast
 singleton ToastService 1.0 ToastService.qml
+
+# FilmService - Service global gérant la connexion à l'API
+FilmService 1.0 FilmService.qml
