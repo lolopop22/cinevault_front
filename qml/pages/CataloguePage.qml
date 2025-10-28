@@ -119,6 +119,7 @@ AppPage {
     Item {
         id: gridContainer
         clip: true                                   // Cache tout ce qui sort des limites
+
         anchors.top: fixedHeader.bottom
         anchors.topMargin: dp(5)                     // Marge pour éviter le header
         anchors.horizontalCenter: parent.horizontalCenter
@@ -136,7 +137,7 @@ AppPage {
 
             model: Model.FilmDataSingletonModel && Model.FilmDataSingletonModel.films ? Model.FilmDataSingletonModel.films : []
 
-            // ← CONDITION : visible seulement si pas en chargement ET qu'il y a des films
+            // Visibilité conditionnelle : visible seulement si pas en chargement ET qu'il y a des films
             visible: !logic.loading && Model.FilmDataSingletonModel.films.length > 0
 
             // Propriétés pour lazy loading
@@ -165,6 +166,7 @@ AppPage {
             }
 
             delegate: Rectangle {
+                id: filmCard
                 width: fixedCardWidth  // Largeur dynamique
                 height: cataloguePage.cellHeight - dp(4) // Petite marge interne
                 radius: dp(6)
@@ -197,14 +199,59 @@ AppPage {
 
                 property real padding: dp(3)
 
+                /**
+                 *Effet visuel au clic
+                 * Feedback visuel lors du press :
+                 * - Opacité réduite à 70% (convention mobile)
+                 * - Scale réduit à 97% (effet de "press" subtil)
+                 * - Animation 100ms (instantané pour l'utilisateur)
+                 * - Easing OutQuad (décélération naturelle)
+                 */
+                property bool isPressed: false
+
+                scale: isPressed ? 0.95 : 1.0
+                opacity: isPressed ? 0.7 : 1.0
+
                 // ============================================
-                // NOUVEAU : ZONE CLIQUABLE POUR LA NAVIGATION
+                // TRANSITIONS POUR LE FEEDBACK VISUEL
+                // ============================================
+
+                /**
+                 * Transition d'opacité
+                 *
+                 * Propriétés :
+                 * - duration: 100ms (imperceptible comme "lag", perçu comme instantané)
+                 * - easing: InOutQuad (accélération puis décélération douce)
+                 */
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: 100
+                        easing.type: Easing.InOutQuad
+                    }
+                }
+
+                /**
+                 * Transition de scale
+                 *
+                 * Propriétés :
+                 * - duration: 100ms (synchronisé avec opacity)
+                 * - easing: OutQuad (décélération douce, plus naturelle)
+                 */
+                Behavior on scale {
+                    NumberAnimation {
+                        duration: 100
+                        easing.type: Easing.OutQuad
+                    }
+                }
+
+                // ============================================
+                // ZONE CLIQUABLE POUR LA NAVIGATION
                 // ============================================
 
                 // MouseArea pour rendre toute la carte cliquable
 
                 MouseArea {
-                    id: cardMouseArea
+                    id: filmCardMouseArea
                     anchors.fill: parent
 
                     // Curseur en forme de main pour indiquer que c'est cliquable (desktop)
@@ -217,13 +264,9 @@ AppPage {
                         console.log("🆔 ID du film:", modelData ? modelData.id : -1)
 
                         // Validation des données avant navigation
-                        if (!modelData) {
-                            console.error("❌ modelData est null, navigation annulée")
-                            return
-                        }
-
-                        if (!modelData.id || modelData.id <= 0) {
-                            console.error("❌ ID de film invalide:", modelData.id, "- navigation annulée")
+                        if (!modelData || !modelData.id || modelData.id <= 0) {
+                            console.error("❌ Données film invalides (modelData est null ou ID de film invalide) - navigation annulée")
+                            Services.ToastService.showError("Film invalide")
                             return
                         }
 
@@ -240,22 +283,17 @@ AppPage {
                         console.log(" ")
                     }
 
-                    /**
-                     * Feedback visuel lors du press :
-                     * - Opacité réduite à 70% (convention mobile)
-                     * - Scale réduit à 97% (effet de "press" subtil)
-                     * - Animation 100ms (instantané pour l'utilisateur)
-                     * - Easing OutQuad (décélération naturelle)
-                     */
-                    onPressedChanged: {
-                        if (pressed) {
-                            console.log("👇 Press sur:", modelData ? modelData.title : "?")
-                            cardContainer.opacity = 0.7
-                            cardContainer.scale = 0.97
-                        } else {
-                            cardContainer.opacity = 1.0
-                            cardContainer.scale = 1.0
-                        }
+                    onPressed: {
+                        console.log("👇 Press sur:", modelData ? modelData.title : "?")
+                        filmCard.isPressed = true
+                    }
+
+                    onReleased: {
+                        filmCard.isPressed = false
+                    }
+
+                    onCanceled: {
+                        filmCard.isPressed = false
                     }
                 }
 
@@ -297,37 +335,37 @@ AppPage {
                         elide: Text.ElideRight
                     }
 
-                    // ============================================
-                    // TRANSITIONS POUR LE FEEDBACK VISUEL
-                    // ============================================
+                    // // ============================================
+                    // // TRANSITIONS POUR LE FEEDBACK VISUEL
+                    // // ============================================
 
-                    /**
-                     * Transition d'opacité
-                     *
-                     * Propriétés :
-                     * - duration: 100ms (imperceptible comme "lag", perçu comme instantané)
-                     * - easing: InOutQuad (accélération puis décélération douce)
-                     */
-                    Behavior on opacity {
-                        NumberAnimation {
-                            duration: 100
-                            easing.type: Easing.InOutQuad
-                        }
-                    }
+                    // /**
+                    //  * Transition d'opacité
+                    //  *
+                    //  * Propriétés :
+                    //  * - duration: 100ms (imperceptible comme "lag", perçu comme instantané)
+                    //  * - easing: InOutQuad (accélération puis décélération douce)
+                    //  */
+                    // Behavior on opacity {
+                    //     NumberAnimation {
+                    //         duration: 100
+                    //         easing.type: Easing.InOutQuad
+                    //     }
+                    // }
 
-                    /**
-                     * Transition de scale
-                     *
-                     * Propriétés :
-                     * - duration: 100ms (synchronisé avec opacity)
-                     * - easing: OutQuad (décélération douce, plus naturelle)
-                     */
-                    Behavior on scale {
-                        NumberAnimation {
-                            duration: 100
-                            easing.type: Easing.OutQuad
-                        }
-                    }
+                    // /**
+                    //  * Transition de scale
+                    //  *
+                    //  * Propriétés :
+                    //  * - duration: 100ms (synchronisé avec opacity)
+                    //  * - easing: OutQuad (décélération douce, plus naturelle)
+                    //  */
+                    // Behavior on scale {
+                    //     NumberAnimation {
+                    //         duration: 100
+                    //         easing.type: Easing.OutQuad
+                    //     }
+                    // }
                 }
             }
 

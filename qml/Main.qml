@@ -131,11 +131,18 @@ App {
 
             NavigationStack {
                 // Attendre que le modèle soit prêt avant de créer la page
-                initialPage: Component {
-                    CataloguePage {
-                        /* Plus besoin de passer le modèle, il sera accessible via import car on passe maintenant par le pattern Singleton */
-                    }
-                }
+                // initialPage: Component {
+                //     CataloguePage {
+                //         /* Plus besoin de passer le modèle, il sera accessible via import car on passe maintenant par le pattern Singleton */
+                //     }
+                // }
+
+                /* Instance directe pour initialPage:
+                * FilmDataSingletonModel est déjà disponible
+                * CataloguePage est toujours la première page affichée
+                * Pas de bénéfice au lazy loading
+                */
+                initialPage: CataloguePage { }
             }
 
             Component.onCompleted: {

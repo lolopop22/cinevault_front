@@ -19,43 +19,81 @@ import "../logic" as Logic
  * - Afficher le poster et le titre (validation visuelle)
  * - Gérer les erreurs de navigation
  * - Valider les transitions de navigation
- * Utilise ToastService pour afficher les notifications
+ * - Utilise ToastService pour afficher les notifications
+ * Responsabilités :
+ * - Afficher les détails d'un film (titre, poster, description, etc.)
+ * - Recevoir le filmId via navigation (push)
+ * - Charger le film via FilmDetailLogic
+ * - Gérer les erreurs avec ToastService
+ * - Fournir bouton retour vers catalogue
+ *
+ * Pattern MVC :
+ * - View : affichage uniquement
+ * - Logic : FilmDetailLogic (orchestration, recherche)
+ * - Model : FilmDataSingletonModel (données)
+ *
+ * Architecture :
+ * Navigation → FilmDetailPage reçoit filmId → FilmDetailLogic.loadFilm(filmId)
+ *          → FilmDetailLogic cherche dans Model
+ *          → Émet filmLoaded ou loadError
+ *          → Page affiche résultat ou toast erreur
  */
 FlickablePage {
     id: filmDetailPage
 
+    // Titre dynamique basé sur le film (binding auto sur logic.currentFilm)
+    title: logic.currentFilm ? logic.currentFilm.title : "Détails du film"
+
     // ============================================
-    // PROPRIÉTÉ PUBLIQUE - Interface de navigation
-    // ===========================================
-    // ID du film à afficher (passé lors du push)
+    // PARAMÈTRES REÇUS VIA NAVIGATION
+    // ============================================
+
+    /**
+     * ID du film à afficher
+     *
+     * Reçu via : navigationStack.push(component, {filmId: X})
+     * Valeur par défaut : -1 (invalide)
+     *
+     * Utilisé dans Component.onCompleted pour validation et chargement
+     */
     property int filmId: -1
 
     // ============================================
-    // LOGIQUE MÉTIER - Instance de FilmDetailLogic
+    // LOGIQUE MÉTIER
     // ============================================
-    // Bindings automatiques sur logic.currentFilm, logic.loading, logic.errorMessage
+
+    /**
+     * Controller pour la page de détails
+     *
+     * Responsabilités :
+     * - Charger le film par ID depuis le Model
+     * - Émettre signaux filmLoaded/loadError
+     * - Gérer l'état (loading, errorMessage, currentFilm)
+     */
     Logic.FilmDetailLogic {
         id: logic
     }
 
     // ============================================
-    // CONFIGURATION DE LA BARRE DE NAVIGATION
+    // HEADER
     // ============================================
 
-    // Titre dynamique basé sur le film (binding auto sur logic.currentFilm)
-    title: logic.currentFilm ? logic.currentFilm.title : "Détails du film"
-
-    // Bouton retour dans la barre de navigation
+    /**
+     * Bouton retour vers le catalogue
+     *
+     * Plateforme : iOS / Android / Desktop
+     * - iOS : swipe from left + bouton
+     * - Android : back button hardware + bouton
+     * - Desktop : bouton uniquement
+     *
+     * Best practice : toujours inclure le bouton pour cohérence
+     */
     leftBarItem: IconButtonBarItem {
         iconType: IconType.arrowleft
         title: "Retour"
         onClicked: {
-            // Retour à la page précédente (CataloguePage)
-            console.log("⬅️ Retour au catalogue via NavigationBar")
-
-            // Nettoyage de l'état avant de quitter
+            // Nettoyage optionnel avant retour
             logic.reset()
-
             navigationStack.pop()
         }
     }
@@ -72,10 +110,15 @@ FlickablePage {
     }
 
     // ============================================
-    // CONFIGURATION DU FLICKABLE INTERNE
+    // CONTENU SCROLLABLE
     // ============================================
 
-    // Configuration du Flickable intégré de FlickablePage
+    /**
+     * Configuration de la zone scrollable
+     *
+     * flickable.contentHeight = hauteur du contenu
+     * Permet scroll automatique si contenu > écran
+     */
     flickable.contentHeight: contentColumn.height + dp(60)
 
     // ============================================
@@ -116,10 +159,12 @@ FlickablePage {
         // ============================================
         // SECTION 2 : INFORMATIONS DE BASE
         // ============================================
-
+        // État : Film chargé avec succès
         Column {
             width: parent.width
             spacing: dp(16)
+
+            visible: !logic.loading && logic.currentFilm !== null
 
             // Titre du film
             AppText {
@@ -147,7 +192,7 @@ FlickablePage {
             // ID du film (pour validation technique)
             AppText {
                 width: parent.width
-                text: "ID du film : " + filmId
+                text: "ID: " + (logic.currentFilm ? logic.currentFilm.id : "N/A")
                 font.pixelSize: sp(14)
                 color: Theme.colors.secondaryTextColor
                 horizontalAlignment: Text.AlignHCenter
@@ -170,6 +215,8 @@ FlickablePage {
             color: Theme.colors.backgroundColor
             border.width: dp(2)
             border.color: Theme.colors.tintColor
+
+            visible: !logic.loading && logic.currentFilm !== null
 
             Column {
                 id: contentPlaceholder
@@ -207,6 +254,29 @@ FlickablePage {
             }
         }
 
+        // État : Erreur
+        Column {
+            visible: !logic.loading && logic.currentFilm === null
+            width: parent.width
+            spacing: dp(12)
+
+            AppIcon {
+                anchors.horizontalCenter: parent.horizontalCenter
+                iconType: IconType.exclamationcircle
+                size: dp(48)
+                color: "#F44336"
+            }
+
+            AppText {
+                width: parent.width
+                text: "Impossible de charger le film"
+                font.bold: true
+                font.pixelSize: sp(16)
+                horizontalAlignment: Text.AlignHCenter
+                wrapMode: Text.WordWrap
+            }
+        }
+
         // ============================================
         // BOUTON RETOUR
         // ============================================
@@ -225,26 +295,53 @@ FlickablePage {
     }
 
     // ============================================
-    // GESTION DES TOASTS VIA TOASTSERVICE
+    // CONNECTIONS - RÉACTION AUX SIGNAUX DE LOGIC
     // ============================================
 
     /**
-     * Connexions aux signaux de la Logic
+     * Écoute les signaux émis par FilmDetailLogic
      *
-     * Utilisation de ToastService :
-     * - Services.ToastService.XXX
-     * - Pas de dépendance sur "app"
-     * - Singleton QML (protection duplication)
-     * - Testable (peut être mocké)
+     * Communication : Logic → View
+     * - filmLoaded(film) : Succès, show toast
+     * - loadError(message) : Erreur, show toast erreur
+     *
+     * Justification Connections :
+     * - Découplage : View ne connaît pas les détails de Logic
+     * - Pattern Observer : réaction aux changements d'état
+     * - Alternative à binding complexe
      */
     Connections {
         target: logic
 
+        /**
+         * Réaction au succès du chargement
+         *
+         * Actions :
+         * - Toast de succès (optionnel, peut être retiré)
+         * - Logs pour debugging
+         *
+         * Limitation actuelle :
+         * - Page très simple, pas encore d'affichage d'image/description
+         * - Ces éléments seront ajoutés lors de la complexification
+         * - Pour maintenant : affichage titre uniquement
+         */
         function onFilmLoaded(film) {
             console.log("🎬 Film chargé avec succès dans la Vue:", film.title)
             Services.ToastService.showSuccess("Film chargé avec succès !")
         }
 
+        /**
+         * Réaction en cas d'erreur
+         *
+         * Actions :
+         * - Toast d'erreur
+         * - Logs pour debugging
+         *
+         * À noter :
+         * - La page reste affichée (pas de fermeture auto)
+         * - L'utilisateur peut cliquer retour
+         * - Page affiche "Impossible de charger le film"
+         */
         function onLoadError(message) {
             console.log("⚠️ Erreur de chargement reçue dans la Vue:", message)
             Services.ToastService.showError(message)
@@ -261,7 +358,16 @@ FlickablePage {
         console.log("📄 Page de détails chargée")
         console.log("🆔 Film ID reçu:", filmId)
 
+        // Validation
+        if (filmId <= 0) {
+            Services.ToastService.showError("ID de film invalide")
+            navigationStack.pop()
+            return
+        }
+
         // ✅ DÉLÉGATION À LA LOGIC (pas de logique métier ici)
+        // Chargement du film
+        console.log("📂 Chargement du film...")
         logic.loadFilm(filmId)
     }
 }
