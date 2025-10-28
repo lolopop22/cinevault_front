@@ -1,17 +1,115 @@
-# Documentation des Composants - Cinevault APP
+# Documentation des Composants - Cinevault APP v1.2 (Corrigée)
 
 ## Vue d'ensemble
 
-Les composants sont des éléments réutilisables de l'interface utilisateur qui encapsulent à la fois l'apparence et le comportement. Ils suivent les principes de **modularité**, **réutilisabilité** et **configurabilité**.
+Les composants sont des éléments réutilisables de l'interface utilisateur qui encapsulent à la fois l'apparence et le comportement. Ils suivent les principes de **modularité**, **réutilisabilité** et **configurabilité**. Cette documentation couvre également les **services globaux** comme le système de notifications Toast.
 
-## Liste des composants
+## Localisation
+
+```
+qml/components/
+├── PosterImage.qml       # Affichage optimisé posters ✅
+├── ToastManager.qml      # Gestionnaire visuel toasts ✨ NOUVEAU
+├── ToastDelegate.qml     # Délégué toast individuel ✨ NOUVEAU
+└── FilmCard.qml          # Carte complète film (à venir)
+
+qml/services/
+└── ToastService.qml      # Service notifications (Singleton) ✨ NOUVEAU
+```
+
+## Liste des composants et services
+
+### Composants UI
 
 | Composant | Description | Statut |
 |-----------|-------------|--------|
 | [PosterImage](PosterImage.md) | Affichage optimisé des posters de films | ✅ Implémenté |
+| [ToastManager](ToastManager.md) | Gestionnaire visuel des toasts | ✅ Implémenté |
+| [ToastDelegate](ToastDelegate.md) | Rendu individuel d'un toast | ✅ Implémenté |
 | FilmCard | Carte complète d'un film | 🔜 À venir |
 | FilterPanel | Panneau de filtres avancés | 🔜 À venir |
 | SearchBar | Barre de recherche IMDb | 🔜 À venir |
+
+### Services Globaux ✨ NOUVEAU
+
+| Service | Description | Statut | Pattern |
+|---------|-------------|--------|---------|
+| [ToastService](ToastService.md) | Système de notifications toast | ✅ Implémenté | Singleton hybride |
+
+---
+
+## Services Globaux ✨ NOUVEAU
+
+### ToastService - Système de Notifications
+
+Service global de notifications non-intrusives affichées en bas de l'écran.
+
+**Localisation** : `qml/services/ToastService.qml`
+
+**Pattern** : Singleton hybride
+- **ToastService** (Singleton) : API publique
+- **ToastManager** (Composant) : Implémentation visuelle
+- **ToastDelegate** (Delegate) : Rendu individuel
+
+#### Caractéristiques principales
+
+✅ **API simple et globale**
+- `showSuccess(message)` - Toast vert
+- `showError(message)` - Toast rouge
+- `showWarning(message)` - Toast orange
+- `showInfo(message)` - Toast bleu
+
+✅ **Design adaptatif**
+- Largeur responsive (mobile/tablet/desktop)
+- Positionnement selon plateforme (iOS/Android/Desktop)
+- Au-dessus de la navigation mais non-bloquant
+
+✅ **Gestion automatique**
+- Auto-destruction après 3 secondes
+- File d'attente (multiples toasts)
+- Nouveaux toasts apparaissent en bas
+
+#### Usage
+
+```qml
+import "../services" as Services
+
+// Dans une Page ou Logic
+Connections {
+    target: logic
+    
+    function onDataLoaded() {
+        Services.ToastService.showSuccess("Données chargées avec succès")
+    }
+    
+    function onErrorOccurred(message) {
+        Services.ToastService.showError(message)
+    }
+}
+```
+
+#### Initialisation (Main.qml)
+
+```qml
+App {
+    // Instance visuelle unique
+    ToastManager {
+        id: globalToastManager
+        parent: Overlay.overlay
+        anchors.fill: parent
+        z: 10000
+    }
+    
+    Component.onCompleted: {
+        // Enregistrement de l'instance
+        ToastService.initialize(globalToastManager)
+    }
+}
+```
+
+**Voir [ToastService.md](ToastService.md) pour la documentation complète**
+
+---
 
 ## Principes de conception
 
@@ -82,6 +180,37 @@ Chaque état doit être visuellement distinct :
 - **Error** : Fallback avec message
 - **Empty** : État vide avec indication
 
+### 5. Services globaux (Singleton pattern) ✨ NOUVEAU
+
+Pour les services transversaux (toasts, analytics, etc.) :
+
+**Avantages** :
+- ✅ Accès global depuis n'importe où
+- ✅ Instance unique garantie
+- ✅ API cohérente et simple
+- ✅ Pas de prop drilling
+
+**Pattern Singleton hybride** :
+```qml
+// ToastService.qml (Singleton)
+pragma Singleton
+import QtQuick 2.15
+
+QtObject {
+    property var _manager: null
+    
+    function initialize(manager) {
+        _manager = manager
+    }
+    
+    function showSuccess(text) {
+        if (_manager) _manager.showSuccess(text)
+    }
+}
+```
+
+---
+
 ## Structure d'un composant
 
 ### Template de base
@@ -150,12 +279,14 @@ Item {
 }
 ```
 
+---
+
 ## Conventions de nommage
 
 ### Fichiers
 - **PascalCase** pour les noms de composants
 - Extension `.qml`
-- Exemples : `PosterImage.qml`, `FilmCard.qml`, `FilterPanel.qml`
+- Exemples : `PosterImage.qml`, `ToastManager.qml`, `ToastDelegate.qml`
 
 ### Propriétés
 ```qml
@@ -177,6 +308,7 @@ property bool shouldLoad: true      // should* pour booléens de décision
 function loadImage() { }
 function resetState() { }
 function updateDisplay() { }
+function showToast(message) { }
 ```
 
 ### IDs
@@ -185,7 +317,10 @@ function updateDisplay() { }
 id: posterImage
 id: loadingIndicator
 id: errorFallback
+id: toastManager
 ```
+
+---
 
 ## Gestion des états
 
@@ -243,6 +378,8 @@ Item {
 }
 ```
 
+---
+
 ## Optimisation des performances
 
 ### 1. Lazy instantiation avec Loader
@@ -284,6 +421,19 @@ Image {
 }
 ```
 
+### 4. Services globaux (Singleton) ✨ NOUVEAU
+
+```qml
+// ✅ BON : Singleton - Instance unique
+Services.ToastService.showSuccess("OK")
+
+// ❌ MAUVAIS : Multiple instances
+ToastManager { id: toast1 }
+ToastManager { id: toast2 }  // Duplication !
+```
+
+---
+
 ## Responsive design
 
 ### Unités adaptatives
@@ -307,9 +457,12 @@ Item {
 }
 ```
 
-### Breakpoints
+### Breakpoints (À implémenter) ⏳
+
+Les breakpoints pour adapter le responsive design selon la taille de l'écran sont en cours de mise en œuvre.
 
 ```qml
+// Modèle futur
 Item {
     readonly property bool isPhone: width < dp(600)
     readonly property bool isTablet: width >= dp(600) && width < dp(1200)
@@ -323,6 +476,8 @@ Item {
     }
 }
 ```
+
+---
 
 ## Accessibilité
 
@@ -340,6 +495,18 @@ Item {
     Accessible.focused: activeFocus
 }
 ```
+
+### Accessibilité des toasts ✨ NOUVEAU
+
+```qml
+Rectangle {
+    Accessible.role: Accessible.Notification
+    Accessible.name: "Notification : " + messageText
+    Accessible.description: "Message de type " + toastType
+}
+```
+
+---
 
 ## Testing
 
@@ -376,6 +543,29 @@ Item {
 }
 ```
 
+### Tests ToastService ✨ NOUVEAU
+
+```qml
+TestCase {
+    name: "ToastServiceTests"
+    
+    function test_showSuccess() {
+        SignalSpy {
+            id: spy
+            target: toastManager.toastModel
+            signalName: "countChanged"
+        }
+        
+        Services.ToastService.showSuccess("Test")
+        
+        compare(spy.count, 1)
+        compare(toastManager.toastModel.get(0).type, "success")
+    }
+}
+```
+
+---
+
 ## Documentation inline
 
 ### Commentaires de propriétés
@@ -411,17 +601,31 @@ function reloadImage() {
     image.source = ""
     image.source = root.source
 }
+
+/**
+ * Affiche un toast de succès
+ * @param {string} text - Message à afficher
+ * @param {number} duration - Durée en ms (défaut: 3000)
+ * @returns {void}
+ */
+function showSuccess(text, duration) {
+    _showToast(text, "success", duration || 3000)
+}
 ```
+
+---
 
 ## Enregistrement des composants
 
-### Fichier qmldir
+### Fichier qmldir (components)
 
 ```
 # qml/components/qmldir
 
 # Composants publics
 PosterImage 1.0 PosterImage.qml
+ToastManager 1.0 ToastManager.qml
+ToastDelegate 1.0 ToastDelegate.qml
 FilmCard 1.0 FilmCard.qml
 FilterPanel 1.0 FilterPanel.qml
 
@@ -429,20 +633,39 @@ FilterPanel 1.0 FilterPanel.qml
 internal ImagePlaceholder ImagePlaceholder.qml
 ```
 
+### Fichier qmldir (services) ✨ NOUVEAU
+
+```
+# qml/services/qmldir
+
+# Services (Singletons)
+singleton ToastService 1.0 ToastService.qml
+```
+
 ### Utilisation
 
 ```qml
 import "../components" as Components
+import "../services" as Services
 
 Item {
+    // Composant
     Components.PosterImage {
         source: "https://example.com/poster.jpg"
+    }
+    
+    // Service (Singleton)
+    Button {
+        onClicked: Services.ToastService.showSuccess("OK")
     }
 }
 ```
 
+---
+
 ## Checklist création composant
 
+### Composant UI
 - [ ] Nom en PascalCase
 - [ ] Propriétés publiques documentées
 - [ ] Propriétés readonly pour états
@@ -456,25 +679,71 @@ Item {
 - [ ] Enregistré dans qmldir
 - [ ] Exemple d'utilisation
 
+### Service Global (Singleton) ✨ NOUVEAU
+- [ ] `pragma Singleton` en début de fichier
+- [ ] Hérite de `QtObject`
+- [ ] API publique claire et documentée
+- [ ] Pattern Singleton hybride si nécessaire
+- [ ] Initialisation dans Main.qml
+- [ ] Vérification `isInitialized()`
+- [ ] Gestion d'erreurs si non initialisé
+- [ ] Logs de debug
+- [ ] Tests unitaires
+- [ ] Enregistré dans qmldir (`singleton`)
+
+---
+
 ## Exemples de composants
 
-Consultez les documentations détaillées :
-
+### Composants UI
 1. [PosterImage](PosterImage.md) - Composant complet avec lazy loading, shimmer, fallback
-2. FilmCard (à venir) - Carte complète d'un film
-3. FilterPanel (à venir) - Panneau de filtres
+2. [ToastManager](ToastManager.md) - Gestionnaire visuel des toasts
+3. [ToastDelegate](ToastDelegate.md) - Rendu individuel d'un toast
+4. FilmCard (à venir) - Carte complète d'un film
+5. FilterPanel (à venir) - Panneau de filtres
+
+### Services Globaux ✨ NOUVEAU
+1. [ToastService](ToastService.md) - Système de notifications toast complet
+   - ToastService (Singleton API)
+   - ToastManager (Composant visuel)
+   - ToastDelegate (Delegate rendu)
+
+---
 
 ## Ressources
 
+### Documentation interne
+- [PosterImage](PosterImage.md)
+- [ToastService](../Data/Services/ToastService.md) ✨ NOUVEAU
+- [ToastManager](ToastManager.md) ✨ NOUVEAU
+- [ToastDelegate](ToastDelegate.md) ✨ NOUVEAU
+- [CataloguePage](../Pages/CataloguePage.md)
+- [FilmDetailPage](../Pages/FilmDetailPage.md)
+- [Architecture MVC](../Architecture/mvc-pattern.md)
+
+### Documentation externe
 - [Guidelines Felgo](https://felgo.com/doc/)
 - [Qt Quick Best Practices](https://doc.qt.io/qt-6/qtquick-bestpractices.html)
 - [Material Design Components](https://material.io/components)
+- [Material Design Snackbars](https://material.io/components/snackbars)
 
 ---
 
 ## Prochaines étapes
 
-1. Créer FilmCard pour affichage détaillé
-2. Implémenter FilterPanel pour filtrage
-3. Ajouter SearchBar pour recherche IMDb
-4. Développer LoadingIndicator personnalisé
+### Court terme
+1. ✅ Système de notifications Toast (implémenté)
+2. ⏳ **Implémenter breakpoints responsive** (À faire)
+3. Créer FilmCard pour affichage détaillé
+4. Implémenter FilterPanel pour filtrage
+
+### Moyen terme
+5. Ajouter SearchBar pour recherche IMDb
+6. Développer LoadingIndicator personnalisé
+7. Service Analytics global (Singleton)
+8. Adapter toasts à différentes largeurs d'écran
+
+### Long terme
+9. Service de gestion du thème (Singleton)
+10. Service de localisation i18n (Singleton)
+11. Composants d'animation réutilisables

@@ -87,11 +87,14 @@ Item {
 qml/
 ├── model/
 │   ├── FilmDataSingletonModel.qml
-│   ├── FilmService.qml
 │   └── qmldir                    ← ICI
 │
 ├── logic/
 │   ├── CatalogueLogic.qml
+│   └── qmldir                    ← Un par dossier
+│
+├── services/
+│   ├── FilmService.qml
 │   └── qmldir                    ← Un par dossier
 │
 ├── components/
@@ -99,8 +102,7 @@ qml/
 │   └── qmldir                    ← Un par dossier
 │
 └── pages/
-    ├── CataloguePage.qml
-    └── qmldir (optionnel)
+    └── CataloguePage.qml
 ```
 
 ### Règle importante

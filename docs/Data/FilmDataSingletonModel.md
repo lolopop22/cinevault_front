@@ -1608,7 +1608,7 @@ function updateFilm(filmId, updatedData) {
 
 - [Architecture MVC](../Architecture/mvc-pattern.md)
 - [Flux de données](../Architecture/data-flow.md)
-- [FilmService](FilmService.md)
+- [FilmService](./Services/FilmService.md)
 - [CatalogueLogic](../Logic/CatalogueLogic.md)
 - [CataloguePage](../Pages/CataloguePage.md)
 - [Pattern Singleton (Wikipedia)](https://en.wikipedia.org/wiki/Singleton_pattern)
