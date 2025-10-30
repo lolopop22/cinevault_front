@@ -2,7 +2,7 @@
 
 ## Vue d'ensemble
 
-Le système de navigation de Cinevault APP utilise le **Bottom Navigation pattern** de Felgo pour offrir une navigation principale intuitive entre les sections principales de l'application.
+Le système de navigation de l'application Cinevault APP repose sur le **pattern Bottom Navigation de Felgo**. Chaque section (Catalogue, Recherche, Profil) dispose de son propre **NavigationStack**, ce qui permet une navigation imbriquée fluide, intuitive et scalable.
 
 ## Architecture de navigation
 
@@ -15,19 +15,20 @@ Main.qml
         ├── NavigationItem "Catalogue"
         │   └── NavigationStack
         │       └── CataloguePage (initialPage)
-        │           └── [FilmDetailPage] (push)
+        │           └── [FilmDetailPage] ✨ NOUVEAU (push avec filmId)
         │
         ├── NavigationItem "Recherche"
         │   └── NavigationStack
-        │       └── RecherchePage (initialPage)
-        │           └── [AddFilmPage] (push)
         │
         └── NavigationItem "Profil"
             └── NavigationStack
-                └── ProfilPage (initialPage)
-                    └── [SettingsPage] (push)
 ```
-
+**Nouveautés v1.2** :
+- ✅ Navigation CataloguePage → FilmDetailPage implémentée
+- ✅ Passage de paramètres (filmId)
+- ✅ Pattern lazy loading avec Component
+- ✅ Validation des paramètres
+- ✅ Intégration ToastService pour notifications
 ---
 
 ## Bottom Navigation
@@ -92,6 +93,7 @@ App {
 ✅ **Icônes + Labels** : Navigation claire et intuitive  
 ✅ **État actif** : Section courante mise en évidence  
 ✅ **Gestes** : Tap pour changer de section  
+✅ **Contexte préservé** : chaque section garde son historique
 
 ---
 
@@ -159,31 +161,206 @@ Button {
 
 ---
 
-## Flux de navigation
+## Passage de Paramètres entre Pages
 
-### Flux principal : Consultation catalogue
+### Syntaxe de base
 
-```
-1. App démarre
-   ↓
-2. Bottom Navigation affiche "Catalogue" (section par défaut)
-   ↓
-3. CataloguePage s'affiche (initialPage)
-   ↓
-4. Utilisateur tape sur un film
-   ↓
-5. navigationStack.push(FilmDetailPage, {filmId: X})
-   ↓
-6. FilmDetailPage s'affiche avec transition
-   ↓
-7. Utilisateur tape "Retour" ou back button
-   ↓
-8. navigationStack.pop()
-   ↓
-9. Retour à CataloguePage
+Pour passer des paramètres lors du push :
+
+```qml
+navigationStack.push(pageComponent, {
+    param1: value1,
+    param2: value2
+})
 ```
 
-### Flux secondaire : Recherche et ajout
+### Exemple : CataloguePage → FilmDetailPage
+
+**Émetteur (CataloguePage)** :
+
+```qml
+Component {
+    id: filmDetailPageComponent
+    FilmDetailPage { }
+}
+
+MouseArea {
+    onClicked: {
+        console.log("=== NAVIGATION VERS DÉTAILS ===")
+        console.log("🖱️  Clic sur film:", modelData.title)
+        console.log("🆔 ID du film:", modelData.id)
+        
+        // Validation des données avant navigation
+        if (!modelData || !modelData.id || modelData.id <= 0) {
+            console.error("❌ Données film invalides")
+            return
+        }
+        
+        // Navigation avec passage de paramètre
+        navigationStack.push(filmDetailPageComponent, {
+            filmId: modelData.id
+        })
+        
+        console.log("✅ Navigation déclenchée")
+    }
+}
+```
+
+**Récepteur (FilmDetailPage)** :
+
+```qml
+FlickablePage {
+    property int filmId: -1  // Propriété reçue du push
+    
+    Component.onCompleted: {
+        console.log("=== DEBUG FilmDetailPage ===")
+        console.log("📄 Page de détails chargée")
+        console.log("🆔 Film ID reçu:", filmId)
+        
+        // Validation du paramètre reçu
+        if (filmId <= 0) {
+            console.error("❌ filmId invalide:", filmId)
+            Services.ToastService.showError("ID de film invalide")
+            navigationStack.pop()
+            return
+        }
+        
+        // Chargement du film
+        logic.loadFilm(filmId)
+    }
+}
+```
+
+### Pattern Lazy Loading avec Component
+
+### Pourquoi utiliser Component ?
+
+**Avantages** :
+- ✅ **Lazy loading** : Page créée uniquement au premier push
+- ✅ **Performance** : Pas de ressources consommées si jamais affichée (économie de mémoire)
+- ✅ **Memory management** : Destruction automatique lors du pop
+- ✅ **Pattern Felgo recommandé**
+
+### Structure recommandée
+
+```qml
+AppPage {
+    // Component défini (pas encore instancié)
+    Component {
+        id: detailPageComponent
+        FilmDetailPage { }
+    }
+    
+    AppButton {
+        text: "Voir détails"
+        onClicked: {
+            // Lazy loading : Page créée ici
+            navigationStack.push(detailPageComponent, {
+                filmId: 5
+            })
+        }
+    }
+}
+```
+
+### Bonnes Pratiques
+
+✅ **À faire** :
+- Utiliser Component pour lazy loading
+- Valider les paramètres dans la page cible
+- Logger les paramètres reçus (debugging)
+
+❌ **À éviter** :
+- Créer la page directement (`FilmDetailPage { visible: false }`)
+- Passer des objets complexes (préférer IDs)
+- Oublier les valeurs par défaut (`property int filmId: -1`)
+
+### Exemple avec validation
+
+```qml
+FlickablePage {
+    property int filmId: -1
+    
+    Component.onCompleted: {
+        // Validation du paramètre
+        if (filmId <= 0) {
+            console.error("❌ filmId invalide:", filmId)
+            Services.ToastService.showError("Erreur de navigation")
+            navigationStack.pop()
+            return
+        }
+        
+        // Paramètre valide, charger le film
+        logic.loadFilm(filmId)
+    }
+}
+```
+
+❌ **Ne pas faire** :
+```qml
+// Mauvais : page créée à l'avance
+FilmDetailPage {
+    id: detailPage
+    visible: false
+}
+
+onClicked: {
+    detailPage.filmId = modelData.id
+    navigationStack.push(detailPage)
+}
+```
+
+**Problèmes** :
+- Page consomme des ressources même si jamais affichée
+- Gestion complexe de l'état
+- Fuites mémoire potentielles
+
+---
+
+## Flux de Navigation Complet
+
+### CataloguePage → FilmDetailPage
+
+```
+1. Utilisateur clique sur une carte film dans le catalogue
+   ↓
+2. MouseArea.onPressed → Feedback visuel (scale: 0.95, opacity: 0.7)
+   ↓
+3. MouseArea.onReleased → Retour normal (scale: 1.0, opacity: 1.0)
+   ↓
+4. MouseArea.onClicked
+   ├─ Logs de debug ("=== NAVIGATION VERS DÉTAILS ===")
+   ├─ Validation modelData (non null)
+   ├─ Validation ID (> 0)
+   └─ navigationStack.push(filmDetailPageComponent, {filmId: X})
+   ↓
+5. FilmDetailPage créée dynamiquement avec filmId injecté
+   ↓
+6. Component.onCompleted de FilmDetailPage déclenché
+   ├─ Validation filmId reçu
+   ├─ Si invalide → ToastService.showError() + pop()
+   └─ Si valide → logic.loadFilm(filmId)
+   ↓
+7. FilmDetailLogic traite le chargement
+   ├─ Film trouvé → filmLoaded(film) → Toast succès + affichage
+   └─ Film non trouvé → loadError(message) → Toast erreur
+```
+
+### FilmDetailPage → CataloguePage (retour)
+
+```
+1. Utilisateur clique bouton "Retour" (leftBarItem)
+   ↓
+2. logic.reset() (nettoyage de l'état)
+   ↓
+3. navigationStack.pop()
+   ↓
+4. FilmDetailPage détruite automatiquement
+   ↓
+5. CataloguePage ré-affichée (état du catalogue conservé)
+```
+
+### Flux secondaire : Recherche et ajout (Futur)
 
 ```
 1. Utilisateur tape sur tab "Recherche"
@@ -218,6 +395,97 @@ CataloguePage (section Catalogue)
 
 Note : Chaque section garde son propre NavigationStack
 ```
+---
+
+## Validation des Paramètres ✨ NOUVEAU
+
+### Pattern de validation recommandé
+
+```qml
+FlickablePage {
+    property int filmId: -1
+    property string filmTitle: ""
+    
+    Component.onCompleted: {
+        // Validation complète des paramètres
+        if (filmId <= 0) {
+            console.error("❌ filmId invalide:", filmId)
+            Services.ToastService.showError("Paramètre filmId manquant ou invalide")
+            navigationStack.pop()
+            return
+        }
+        
+        // Paramètre valide, procéder au chargement
+        logic.loadFilm(filmId)
+    }
+}
+```
+
+### Exemples de validation
+
+#### Validation ID numérique
+```qml
+if (!filmId || filmId <= 0) {
+    Services.ToastService.showError("ID de film invalide")
+    navigationStack.pop()
+    return
+}
+```
+
+#### Validation string non vide
+```qml
+if (!filmTitle || filmTitle.trim() === "") {
+    Services.ToastService.showError("Titre de film manquant")
+    navigationStack.pop()
+    return
+}
+```
+
+#### Validation objet complexe
+```qml
+if (!filmData || typeof filmData !== "object") {
+    Services.ToastService.showError("Données film invalides")
+    navigationStack.pop()
+    return
+}
+```
+
+---
+
+## Gestion des Erreurs avec ToastService ✨ NOUVEAU
+
+### Pattern d'erreur de navigation
+
+```qml
+// Dans la page réceptrice
+Component.onCompleted: {
+    if (paramètre_invalide) {
+        Services.ToastService.showError("Message d'erreur clair")
+        navigationStack.pop()  // Retour immédiat
+        return
+    }
+    
+    // Continuer si paramètres valides
+}
+```
+
+### Intégration avec les Connections
+
+```qml
+Connections {
+    target: logic
+    
+    function onDataLoaded() {
+        Services.ToastService.showSuccess("Données chargées avec succès")
+    }
+    
+    function onLoadError(message) {
+        Services.ToastService.showError(message)
+        // Optionnel : retour automatique si erreur critique
+        // navigationStack.pop()
+    }
+}
+```
 
 ---
 
@@ -226,10 +494,21 @@ Note : Chaque section garde son propre NavigationStack
 ### Transitions par défaut
 
 Felgo applique automatiquement des transitions :
+- **iOS** : Slide horizontal (droite vers gauche)
+- **Android** : Material Design transitions
+- **Desktop** : Fade + scale
 - **Push** : Slide de droite à gauche
 - **Pop** : Slide de gauche à droite
 - **Durée** : ~300ms
 - **Easing** : OutQuad
+
+### Durée des animations
+
+```
+Push : ~300ms
+Pop : ~250ms
+```
+**Note** : Les transitions sont optimisées par plateforme et ne nécessitent pas de configuration manuelle.
 
 ### Personnalisation
 
@@ -281,18 +560,53 @@ AppPage {
 
 ---
 
-## Gestion du back button
+## Gestion du back button et Gesture Navigation
 
 ### Android back button
 
 Felgo gère automatiquement le back button Android :
 - **Dans une pile** : `navigationStack.pop()`
 - **Page initiale** : Ferme l'application (avec confirmation optionnelle)
+- Bouton back hardware/software
+- Swipe depuis le bord gauche
+- Gestion automatique par NavigationStack
 
 ### iOS swipe back
 
 Felgo gère automatiquement le swipe depuis le bord gauche :
 - Swipe → `navigationStack.pop()`
+- Swipe depuis le bord gauche (edge swipe)
+- Animation slide droite
+- Gestion automatique par NavigationStack
+
+**Desktop** :
+- Bouton explicit dans la barre de titre
+- Raccourcis clavier (Alt+Left, Escape)
+
+### leftBarItem (recommandé)
+
+```qml
+FlickablePage {
+    leftBarItem: IconButtonBarItem {
+        iconType: IconType.arrowleft
+        title: "Retour"
+        onClicked: {
+            logic.reset()  // Nettoyage optionnel
+            navigationStack.pop()
+        }
+    }
+}
+```
+
+### Comportement par plateforme
+
+| Plateforme | Bouton retour | Gesture back | Bouton système |
+|------------|---------------|--------------|----------------|
+| **iOS** | ✅ Visible | ✅ Swipe droite | ❌ |
+| **Android** | ✅ Visible | ✅ Swipe droite | ✅ Back button |
+| **Desktop** | ✅ Visible | ❌ | ❌ |
+
+**Recommandation** : Toujours implémenter `leftBarItem` pour cohérence cross-platform.
 
 ### Confirmation avant fermeture
 
@@ -314,6 +628,23 @@ App {
 }
 ```
 
+### Configuration additionnelle (optionelle)
+
+```qml
+NavigationStack {
+    // Désactiver gesture si nécessaire
+    popGestureEnabled: false
+    
+    // Animation personnalisée
+    pushTransition: Transition {
+        PropertyAnimation {
+            property: "x"
+            duration: 300
+            easing.type: Easing.OutCubic
+        }
+    }
+}
+```
 ---
 
 ## Exemples d'implémentation
@@ -420,6 +751,79 @@ Button {
 }
 ```
 
+### Exemple 4 : Navigation avec multiples paramètres
+
+```qml
+navigationStack.push(filmDetailPageComponent, {
+    filmId: modelData.id,
+    filmTitle: modelData.title,
+    fromPage: "catalogue"
+})
+```
+
+### Exemple 5 : Navigation conditionnelle
+
+```qml
+onClicked: {
+    if (modelData.isAvailable) {
+        navigationStack.push(filmDetailPageComponent, {
+            filmId: modelData.id
+        })
+    } else {
+        Services.ToastService.showWarning("Film non disponible")
+    }
+}
+```
+
+### Exemple 6 : Navigation avec callback
+
+```qml
+navigationStack.push(editPageComponent, {
+    filmId: modelData.id,
+    onSaveCompleted: function(savedFilm) {
+        // Callback exécuté après sauvegarde
+        Services.ToastService.showSuccess("Film sauvegardé")
+        // Optionnel : rafraîchir catalogue
+        logic.refreshCatalogue()
+    }
+})
+```
+---
+
+## Cas d'Usage Avancés
+
+### Navigation profonde avec état partagé
+
+```qml
+// Passer un objet de contexte
+navigationStack.push(editPageComponent, {
+    filmData: modelData,
+    editMode: "update",
+    onFinished: function(result) {
+        if (result.saved) {
+            Services.ToastService.showSuccess("Modifications sauvegardées")
+            logic.refreshCatalogue()
+        }
+        navigationStack.pop()
+    }
+})
+```
+
+### Navigation avec confirmation
+
+```qml
+onClicked: {
+    if (modelData.requiresConfirmation) {
+        confirmDialog.filmId = modelData.id
+        confirmDialog.open()
+    } else {
+        navigationStack.push(filmDetailPageComponent, {
+            filmId: modelData.id
+        })
+    }
+}
+```
+
 ---
 
 ## Deep linking (futur)
@@ -449,6 +853,28 @@ App {
     }
 }
 ```
+---
+
+## Performance et Optimisations
+
+### Lazy Loading Benefits
+
+**Mémoire** :
+- FilmDetailPage : ~50-100KB par instance
+- Component : ~5KB (définition seulement)
+- **Économie** : 90%+ si page jamais affichée
+
+**Temps de démarrage** :
+- Création différée jusqu'au premier push
+- Initialisation plus rapide de l'app
+- Meilleure responsiveness
+
+### Destruction automatique
+
+```qml
+// Lors du pop(), la page est automatiquement détruite
+navigationStack.pop()  // FilmDetailPage libérée de la mémoire
+```
 
 ---
 
@@ -465,7 +891,7 @@ NavigationStack {
 }
 ```
 
-2. **Utiliser Component pour les pages push**
+2. **Utiliser Component pour les pages push (pour bénéficier du lazy loading)**
 ```qml
 Component {
     id: detailPageComponent
@@ -491,9 +917,24 @@ leftBarItem: IconButtonBarItem {
 }
 ```
 
+5. **Utiliser ToastService pour les erreurs**
+```qml
+Services.ToastService.showError("Erreur de navigation")
+```
+
+6. **Valider tous les paramètres reçus**
+```qml
+if (filmId <= 0) { /* erreur */ }
+```
+
+7. **Nettoyer l'état avant retour**
+```qml
+onClicked: { logic.reset(); navigationStack.pop() }
+```
+
 ### ❌ À éviter
 
-1. **Ne pas instancier directement les pages**
+1. **Ne pas instancier directement les pages (Ne famais les créer à l'avance)**
 ```qml
 // ❌ MAUVAIS
 navigationStack.push(FilmDetailPage { filmId: 1 })
@@ -571,12 +1012,66 @@ function test_navigationFlow() {
     verify(recherchePage.visible)
 }
 ```
+---
+
+## Troubleshooting
+
+### Problème : Paramètre non reçu
+
+**Symptôme** : `filmId` est `undefined` dans la page réceptrice
+
+**Solution** :
+```qml
+// Vérifier la syntaxe du push
+navigationStack.push(pageComponent, {
+    filmId: modelData.id  // Assurer que modelData.id existe
+})
+
+// Vérifier la propriété dans la page
+property int filmId: -1  // Valeur par défaut
+```
+
+### Problème : Page ne se charge pas
+
+**Symptôme** : NavigationStack ne push pas
+
+**Solutions** :
+1. Vérifier que `pageComponent` est un Component valide
+2. Vérifier les logs d'erreur QML
+3. Tester avec une page simple
+
+```qml
+// Test minimal
+Component {
+    id: testComponent
+    AppPage { title: "Test" }
+}
+```
+
+### Problème : Fuite mémoire
+
+**Symptôme** : Pages s'accumulent en mémoire
+
+**Solutions** :
+1. Utiliser Component (pas d'instance directe)
+2. Appeler `pop()` pour nettoyer
+3. Éviter les références circulaires
 
 ---
 
 ## Références
 
-- [CataloguePage](CataloguePage.md)
-- [Architecture MVC](../architecture/mvc-pattern.md)
-- [Felgo Navigation](https://felgo.com/doc/felgo-navigation/)
+### Documentation
+
+- [CataloguePage](CataloguePage.md) - Page catalogue avec navigation
+- [Architecture MVC](../Architecture/mvc-pattern.md) - Architecture de l'application
+- [FilmDetailPage](./FilmDetailPage.md) - Page de détails avec paramètres
+- [FilmDetailLogic](../Logic/FilmDetailLogic.md) - Controller MVC
+- [ToastService](../Components/ToastService.md) - Notifications globales
+
+### Liens externes
+
 - [Felgo NavigationStack](https://felgo.com/doc/felgo-navigationstack/)
+- [Felgo Bottom Navigation](https://felgo.com/doc/felgo-navigation/)
+- [QML Component](https://doc.qt.io/qt-6/qml-qtqml-component.html)
+

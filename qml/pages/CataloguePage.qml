@@ -5,6 +5,7 @@ import Qt5Compat.GraphicalEffects
 import "../logic" as Logic
 import "../model" as Model
 import "../components" as Components
+import "../services" as Services
 
 
 AppPage {
@@ -118,6 +119,7 @@ AppPage {
     Item {
         id: gridContainer
         clip: true                                   // Cache tout ce qui sort des limites
+
         anchors.top: fixedHeader.bottom
         anchors.topMargin: dp(5)                     // Marge pour éviter le header
         anchors.horizontalCenter: parent.horizontalCenter
@@ -135,7 +137,7 @@ AppPage {
 
             model: Model.FilmDataSingletonModel && Model.FilmDataSingletonModel.films ? Model.FilmDataSingletonModel.films : []
 
-            // ← CONDITION : visible seulement si pas en chargement ET qu'il y a des films
+            // Visibilité conditionnelle : visible seulement si pas en chargement ET qu'il y a des films
             visible: !logic.loading && Model.FilmDataSingletonModel.films.length > 0
 
             // Propriétés pour lazy loading
@@ -164,6 +166,7 @@ AppPage {
             }
 
             delegate: Rectangle {
+                id: filmCard
                 width: fixedCardWidth  // Largeur dynamique
                 height: cataloguePage.cellHeight - dp(4) // Petite marge interne
                 radius: dp(6)
@@ -195,7 +198,107 @@ AppPage {
 
 
                 property real padding: dp(3)
+
+                /**
+                 *Effet visuel au clic
+                 * Feedback visuel lors du press :
+                 * - Opacité réduite à 70% (convention mobile)
+                 * - Scale réduit à 97% (effet de "press" subtil)
+                 * - Animation 100ms (instantané pour l'utilisateur)
+                 * - Easing OutQuad (décélération naturelle)
+                 */
+                property bool isPressed: false
+
+                scale: isPressed ? 0.95 : 1.0
+                opacity: isPressed ? 0.7 : 1.0
+
+                // ============================================
+                // TRANSITIONS POUR LE FEEDBACK VISUEL
+                // ============================================
+
+                /**
+                 * Transition d'opacité
+                 *
+                 * Propriétés :
+                 * - duration: 100ms (imperceptible comme "lag", perçu comme instantané)
+                 * - easing: InOutQuad (accélération puis décélération douce)
+                 */
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: 100
+                        easing.type: Easing.InOutQuad
+                    }
+                }
+
+                /**
+                 * Transition de scale
+                 *
+                 * Propriétés :
+                 * - duration: 100ms (synchronisé avec opacity)
+                 * - easing: OutQuad (décélération douce, plus naturelle)
+                 */
+                Behavior on scale {
+                    NumberAnimation {
+                        duration: 100
+                        easing.type: Easing.OutQuad
+                    }
+                }
+
+                // ============================================
+                // ZONE CLIQUABLE POUR LA NAVIGATION
+                // ============================================
+
+                // MouseArea pour rendre toute la carte cliquable
+
+                MouseArea {
+                    id: filmCardMouseArea
+                    anchors.fill: parent
+
+                    // Curseur en forme de main pour indiquer que c'est cliquable (desktop)
+                    cursorShape: Qt.PointingHandCursor
+
+                    // Gestionnaire de clic - Navigation vers FilmDetailPage
+                    onClicked: {
+                        console.log("=== NAVIGATION VERS DÉTAILS ===")
+                        console.log("🖱️  Clic sur film:", modelData ? modelData.title : "Inconnu")
+                        console.log("🆔 ID du film:", modelData ? modelData.id : -1)
+
+                        // Validation des données avant navigation
+                        if (!modelData || !modelData.id || modelData.id <= 0) {
+                            console.error("❌ Données film invalides (modelData est null ou ID de film invalide) - navigation annulée")
+                            Services.ToastService.showError("Film invalide")
+                            return
+                        }
+
+                        // Navigation vers la page de détails
+                        // navigationStack : propriété automatique fournie par NavigationStack
+                        // push(component, properties) : empile une nouvelle page avec propriétés
+                        console.log("🚀 Push vers FilmDetailPage avec filmId:", modelData.id)
+
+                        navigationStack.push(filmDetailPageComponent, {
+                            filmId: modelData.id
+                        })
+
+                        console.log("✅ Navigation déclenchée")
+                        console.log(" ")
+                    }
+
+                    onPressed: {
+                        console.log("👇 Press sur:", modelData ? modelData.title : "?")
+                        filmCard.isPressed = true
+                    }
+
+                    onReleased: {
+                        filmCard.isPressed = false
+                    }
+
+                    onCanceled: {
+                        filmCard.isPressed = false
+                    }
+                }
+
                 Column {
+                    id: cardContainer
                     anchors.fill: parent
                     anchors.margins: parent.padding
                     spacing: dp(4)
@@ -231,6 +334,38 @@ AppPage {
                         maximumLineCount: 2
                         elide: Text.ElideRight
                     }
+
+                    // // ============================================
+                    // // TRANSITIONS POUR LE FEEDBACK VISUEL
+                    // // ============================================
+
+                    // /**
+                    //  * Transition d'opacité
+                    //  *
+                    //  * Propriétés :
+                    //  * - duration: 100ms (imperceptible comme "lag", perçu comme instantané)
+                    //  * - easing: InOutQuad (accélération puis décélération douce)
+                    //  */
+                    // Behavior on opacity {
+                    //     NumberAnimation {
+                    //         duration: 100
+                    //         easing.type: Easing.InOutQuad
+                    //     }
+                    // }
+
+                    // /**
+                    //  * Transition de scale
+                    //  *
+                    //  * Propriétés :
+                    //  * - duration: 100ms (synchronisé avec opacity)
+                    //  * - easing: OutQuad (décélération douce, plus naturelle)
+                    //  */
+                    // Behavior on scale {
+                    //     NumberAnimation {
+                    //         duration: 100
+                    //         easing.type: Easing.OutQuad
+                    //     }
+                    // }
                 }
             }
 
@@ -246,92 +381,19 @@ AppPage {
         }
     }
 
+    // ============================================
+    // COMPOSANT DE PAGE DE DÉTAILS (lazy loading)
+    // ============================================
 
-    // === MODAL D'ERREUR EN BAS DE FENÊTRE ===
-    AppModal {
-        id: errorModal
-
-        // Configuration modal partiel en bas
-        fullscreen: false
-        modalHeight: dp(150)
-
-        // Positionnement en bas (via ancrage du contenu)
-        pushBackContent: cataloguePage
-
-        // Fermeture par tap externe
-        closeOnBackgroundClick: true
-        closeWithBackButton: true
-
-        // Couleur de fond du modal
-        backgroundColor: "transparent"
-
-        // === CONTENU DU MODAL D'ERREUR ===
-        Rectangle {
-            id: modalContainer
-            width: Math.min(dp(350), parent.width * 0.9)   // largeur contrôlée et responsive
-            height: parent.height
-
-            // Ancré en bas avec marge pour le décaler vers le haut
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: dp(40)
-
-            radius: dp(12)
-            color: Theme.colors.backgroundColor
-
-            layer.enabled: true
-            layer.effect: DropShadow {
-                horizontalOffset: 0
-                verticalOffset: dp(4)
-                radius: dp(8)
-                samples: 17
-                color: Qt.rgba(0, 0, 0, 0.3)
-            }
-
-            Column {
-                anchors.fill: parent
-                anchors.margins: dp(10)
-                spacing: dp(12)
-
-                AppIcon {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    iconType: IconType.exclamationtriangle
-                    color: "#FFA500"
-                    size: dp(24)
-                }
-
-                AppText {
-                    id: errorText
-                    width: parent.width
-                    text: ""
-                    color: Theme.colors.textColor
-                    font.pixelSize: sp(14)
-                    wrapMode: Text.WordWrap
-                    horizontalAlignment: Text.AlignHCenter
-                    maximumLineCount: 4
-                }
-
-                Row {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    spacing: dp(20)
-
-                    AppButton {
-                        text: "Rejeter"
-                        flat: true
-                        textColor: Theme.colors.secondaryTextColor
-                        onClicked: errorModal.close()
-                    }
-
-                    AppButton {
-                        text: "Rafraîchir"
-                        backgroundColor: Theme.colors.tintColor
-                        onClicked: {
-                            // errorModal.close()
-                            logic.refreshCatalogue()
-                        }
-                    }
-                }
-            }
+    /**
+     * Component pour la page de détails
+     * Pattern de lazy instantiation (lazy loading)
+     * La page n'est créée qu'au moment du push, économisant mémoire et temps de chargement
+     */
+    Component {
+        id: filmDetailPageComponent
+        FilmDetailPage {
+            // La page sera créée dynamiquement avec les propriétés passées lors du push (filmId)
         }
     }
 
@@ -339,8 +401,8 @@ AppPage {
     Connections {
         target: logic
         function onErrorOccurred(message) {
-            errorText.text = message
-            errorModal.open()
+            console.log("⚠️ Erreur reçue dans la vue CataloguePage:", message)
+            Services.ToastService.showError(message)
         }
     }
 
