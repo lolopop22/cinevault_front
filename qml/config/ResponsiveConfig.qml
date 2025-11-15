@@ -1,158 +1,195 @@
 pragma Singleton
-import QtQuick
+import Felgo 4.0
+import QtQuick 2.15
 
 /**
- * ResponsiveConfig
+ * ResponsiveConfig - Singleton de configuration responsive
  *
- * Breakpoints = seuils de largeur d'écran qui déclenchent un changement de layout
- *
- * Responsabilité :
- * - Définir les 6 breakpoints basés sur appareils réels
- * - Décider nombre de colonnes par breakpoint
- * - Calculer la largeur réelle d'une colonne
+ * Responsabilités :
+ * - Breakpoints adaptatifs (seuils de largeur d'écran qui
+ *   déclenchent un changement de layout)
+ * - Calcul du nombre de colonnes par taille d'écran
+ * - Espacement standardisé en 7 niveaux
  */
 
 QtObject {
     id: root
     
+    // Facteur de densité : convertit pixels en device-independent pixels
+    // Permet que les tailles soient adaptées au DPI de l'écran
+    // readonly property real dp: Screen.pixelDensity / 160
+
+    // /**
+    //  * Convertit des pixels réels en dp (device-independent pixels)
+    //  *
+    //  * @param pixels - Valeur en pixels réels
+    //  * @return Valeur équivalente en dp
+    //  *
+    //  * Exemple : 390px sur iPhone (DPI 326)
+    //  * → 390 * 0.02 = 7.8 dp
+    //  */
+    // function pixelsToDp(pixels) {
+    //     return pixels * root.dp
+    // }
+
     // ============================================
-    // 1 : BREAKPOINTS
+    // BREAKPOINTS (seuils de largeur)
     // ============================================
 
-    // 6 seuils de largeur d'écran basés sur résolutions réelles
     readonly property QtObject breakpoints: QtObject {
-        // 320px : Petit téléphone (iPhone SE, vieux Android)
+        // Mobile petit (iPhone SE, vieux téléphones)
         readonly property real mobileSmall: 320
-        
-        // 480px : Téléphone standard (iPhone 12, Pixel 5, Galaxy S21)
+
+        // Mobile standard (iPhone 12, Pixel, Galaxy S21)
         readonly property real mobileNormal: 480
-        
-        // 720px : Tablette portrait (iPad mini, Galaxy Tab)
+
+        // Tablette en portrait (iPad mini, Galaxy Tab)
         readonly property real tabletPortrait: 720
-        
-        // 1024px : Tablette paysage (iPad, iPad Pro portrait)
+
+        // Tablette en landscape (iPad, iPad Pro portrait)
         readonly property real tabletLandscape: 1024
-        
-        // 1280px : Desktop standard (1280x720)
+
+        // Desktop standard (1280x720)
         readonly property real desktop: 1280
-        
-        // 1920px : Desktop large (1920x1080, 4K)
+
+        // Desktop large (1920x1080+)
         readonly property real desktopLarge: 1920
     }
-    
+
     // ============================================
-    // 2: GRID CONFIGURATION - COLONNES
+    // CONFIGURATION GRILLE (nombre de colonnes)
     // ============================================
 
-    // Nombre de colonnes adapté à chaque breakpoint
     readonly property QtObject gridConfig: QtObject {
-        // Mobile small & normal : 2 colonnes (priorité lisibilité)
+        // Mobile : priorité à la lisibilité
         readonly property int mobileSmallColumns: 2
         readonly property int mobileNormalColumns: 2
-        
-        // Tablet portrait : 3 colonnes (utilisation espace)
+
+        // Tablet : utilisation efficace de l'espace
         readonly property int tabletPortraitColumns: 3
-        
-        // Tablet landscape : 4 colonnes (espace horizontal)
         readonly property int tabletLandscapeColumns: 4
-        
-        // Desktop : 5 colonnes
+
+        // Desktop : utilisation maximale
         readonly property int desktopColumns: 5
-        
-        // Desktop large : 6 colonnes
         readonly property int desktopLargeColumns: 6
     }
-    
+
+
     // ============================================
-    // 3 : FONCTION - DÉTERMINER NBRE DE COLONNES
+    // FONCTION : Nombre de colonnes optimal
     // ============================================
+
     /**
-     * Retourne le nombre de colonnes optimal basé sur une largeur
-     * 
-     * @param {real} width - Largeur disponible en pixels
-     * @return {int} Nombre de colonnes à utiliser
-     * 
-     * LOGIQUE :
-     * width < 720   → 2 colonnes
-     * width < 1024  → 3 colonnes
-     * width < 1280  → 4 colonnes
-     * width < 1920  → 5 colonnes
-     * width >= 1920 → 6 colonnes
-     * 
-     * EXPLICATION :
-     * Chaque condition teste si width est dans une plage.
-     * Par exemple :
-     * - Si width = 500 et breakpoint.tabletPortrait = 720
-     * - 500 < 720 ? Oui → retourner 2 colonnes
+     * Retourne le nombre de colonnes adapté à une largeur d'écran
+     *
+     * @param width - Largeur en pixels réels
+     * @return Nombre de colonnes optimal
+     *
      */
     function getColumnCount(width) {
-        // Premier breakpoint où on passe à 3 colonnes
         if (width < root.breakpoints.tabletPortrait) {
-            return root.gridConfig.mobileNormalColumns  // 2
+            return root.gridConfig.mobileNormalColumns
         }
-        
-        // Breakpoint où on passe à 4 colonnes
         else if (width < root.breakpoints.tabletLandscape) {
-            return root.gridConfig.tabletPortraitColumns  // 3
+            return root.gridConfig.tabletPortraitColumns
         }
-        
-        // Breakpoint où on passe à 5 colonnes
         else if (width < root.breakpoints.desktop) {
-            return root.gridConfig.tabletLandscapeColumns  // 4
+            return root.gridConfig.tabletLandscapeColumns
         }
-        
-        // Breakpoint où on passe à 6 colonnes
         else if (width < root.breakpoints.desktopLarge) {
-            return root.gridConfig.desktopColumns  // 5
+            return root.gridConfig.desktopColumns
         }
-        
-        // Si écran large, on retourne 6 colonnes (maximum)
         else {
-            return root.gridConfig.desktopLargeColumns  // 6
+            return root.gridConfig.desktopLargeColumns
         }
     }
+
     
     // ============================================
-    // 4 : FONCTION - CALCULER LARGEUR COLONNE
+    // FONCTION : Largeur d'une colonne
     // ============================================
+
     /**
-     * Calcule la largeur réelle d'UNE colonne dans une grille
-     * 
-     * @param {real} containerWidth - Largeur totale du conteneur
-     * @param {int} columnCount - Nombre de colonnes (optionnel, auto-détecté)
-     * @return {real} Largeur disponible pour UNE colonne (sans espacement)
-     * 
-     * FORMULE :
-     * (containerWidth - espacements totaux) / nombre de colonnes
-     * 
-     * EXEMPLE 1 : Tablet portrait (720px, 3 colonnes)
-     * - Largeur conteneur : 720px
-     * - Nombre colonnes : 3
-     * - Espacements inter-colonnes : 2 × 12 = 24px (2 espacements)
-     * - Calcul : (720 - 24) / 3 = 232px par colonne
-     * 
-     * EXEMPLE 2 : Mobile (480px, 2 colonnes)
-     * - Largeur conteneur : 480px
-     * - Nombre colonnes : 2
-     * - Espacements inter-colonnes : 1 × 12 = 12px (1 espacement)
-     * - Calcul : (480 - 12) / 2 = 234px par colonne
+     * Calcule la largeur réelle d'une colonne
      *
-     * Pour le moment, on hardcode 12px d'espacement.
-     * Mais ce sera centralisé dans la section dédiée au spacing.
+     * Formule : (largeur totale - espacements) / nombre de colonnes
+     *
+     * Exemple : Tablet portrait (720px, 3 colonnes, 12px espacement)
+     * (720 - 24) / 3 = 232px par colonne
      */
     function calculateColumnWidth(containerWidth, columnCount) {
-        // Espacement entre colonnes (TODO : à centraliser plus tard)
         const itemSpacing = 12
-        
-        // Déterminer le nombre de colonnes (auto-détection si pas fourni)
         const cols = columnCount || root.getColumnCount(containerWidth)
-        
-        // Entre N colonnes, il y a N-1 espacements d'où (cols - 1) espacement
-        // Exemple : 3 colonnes = 2 espacements (col1 | space | col2 | space | col3)
-        // on calcule l'espace pris par les espacements
         const totalSpacing = Math.max(0, (cols - 1) * itemSpacing)
-        
-        // On divise par cols car on veut répartir équitablement l'espace restant entre les colonnes
         return (containerWidth - totalSpacing) / cols
+    }
+
+    // ============================================
+    // ESPACEMENT (7 niveaux)
+    // ============================================
+
+    readonly property QtObject spacing: QtObject {
+        // Micro-espacement (bordures, traits fins)
+        readonly property real xs: 4
+
+        // Petit espacement (padding buttons, icônes)
+        readonly property real sm: 8
+
+        // Standard (padding conteneurs, Material Design)
+        readonly property real md: 12
+
+        // Moyen (marges éléments, spacings)
+        readonly property real lg: 16
+
+        // Grand (séparation sections)
+        readonly property real xl: 20
+
+        // Très grand (blocs majeurs)
+        readonly property real xxl: 24
+
+        // Énorme (respiration desktop large)
+        readonly property real xxxl: 32
+
+
+        /**
+        * Marge adaptative du conteneur selon taille écran
+        *
+         * Logique :
+         * - Mobile  (< 720px)   : sm = 8px
+         * - Tablet  (720-1280px): lg = 16px
+         * - Desktop (≥ 1280px)  : xl = 20px
+        */
+        function getContentMargin(availableWidth) {
+
+            if (availableWidth < root.breakpoints.tabletPortrait) {
+                return sm  // Mobile
+            }
+            else if (availableWidth < root.breakpoints.desktop) {
+                return lg  // Tablet
+            }
+            else {
+                return xl  // Desktop
+            }
+        }
+
+        /**
+         * Espacement adaptatif entre items grille
+         *
+         * Logique :
+         * - Mobile  (< 720px)   : sm = 8px
+         * - Tablet  (720-1280px): md = 12px
+         * - Desktop (≥ 1280px)  : lg = 16px
+        */
+        function getItemSpacing(availableWidth) {
+            if (availableWidth < root.breakpoints.tabletPortrait) {
+                return sm  // Mobile
+            }
+            else if (availableWidth < root.breakpoints.desktop) {
+                return md  // Tablet
+            }
+            else {
+                return lg  // Desktop
+            }
+        }
     }
 }
