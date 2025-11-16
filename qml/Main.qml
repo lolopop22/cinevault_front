@@ -23,6 +23,7 @@ App {
     // TOAST MANAGER - Instance visuelle unique
     // ============================================
 
+
     /**
      * ToastManager - Gestionnaire visuel des toasts
      *
@@ -42,6 +43,7 @@ App {
     ToastManager {
         id: globalToastManager
 
+
         /**
          * Parent : Overlay de l'application
          *
@@ -57,6 +59,7 @@ App {
          */
         parent: Overlay.overlay
 
+
         /**
          * Remplit tout l'overlay
          *
@@ -65,6 +68,7 @@ App {
          * - Responsive (s'adapte à la taille de fenêtre)
          */
         anchors.fill: parent
+
 
         /**
          * Z-index très élevé
@@ -80,6 +84,7 @@ App {
     // ============================================
     // INITIALISATION TOASTSERVICE
     // ============================================
+
 
     /**
      * Initialisation du ToastService Singleton
@@ -116,7 +121,6 @@ App {
         console.log(" ")
 
         // Chargement initial des données (sera implémenté plus tard)
-
         console.log("=== APPLICATION PRÊTE ===")
     }
 
@@ -140,12 +144,13 @@ App {
                 //     }
                 // }
 
+
                 /* Instance directe pour initialPage:
                 * FilmDataSingletonModel est déjà disponible
                 * CataloguePage est toujours la première page affichée
                 * Pas de bénéfice au lazy loading
                 */
-                initialPage: CataloguePage { }
+                initialPage: CataloguePage {}
             }
 
             Component.onCompleted: {
@@ -163,7 +168,6 @@ App {
                     AppPage {
                         title: "Tests Responsive Features"
 
-
                         Column {
                             anchors.fill: parent
                             anchors.margins: dp(16)
@@ -179,19 +183,29 @@ App {
                             AppButton {
                                 text: "Test Spacing"
                                 width: parent.width
-                                onClicked: navigationStack.push(testResponsiveSpacingComponent)
+                                onClicked: navigationStack.push(
+                                               testResponsiveSpacingComponent)
                             }
 
                             AppButton {
                                 text: "Test Content Margin Adaptatif"
                                 width: parent.width
-                                onClicked: navigationStack.push(testResponsiveContentMarginComponent)
+                                onClicked: navigationStack.push(
+                                               testResponsiveContentMarginComponent)
                             }
 
                             AppButton {
                                 text: "Test Item Spacing Adaptatif"
                                 width: parent.width
-                                onClicked: navigationStack.push(testResponsiveItemSpacingComponent)
+                                onClicked: navigationStack.push(
+                                               testResponsiveItemSpacingComponent)
+                            }
+
+                            AppButton {
+                                text: "Test Calcul Largeur Colonne"
+                                width: parent.width
+                                onClicked: navigationStack.push(
+                                               testResponsiveCalculateColumnWidth)
                             }
                         }
                     }
@@ -254,446 +268,9 @@ App {
         id: testResponsiveItemSpacingComponent
         TestResponsiveItemSpacing {}
     }
+
+    Component {
+        id: testResponsiveCalculateColumnWidth
+        TestResponsiveCalculateColumnWidth {}
+    }
 }
-
-
-// import QtQuick
-// import QtQuick.Window
-// import QtQuick.Controls
-// import "config"
-
-// /**
-//  * TestStep1_3_1.qml - Étape 1.3.1 TEST : ESPACEMENT STATIQUE
-//  *
-//  * ✅ Objectifs :
-//  * 1. Vérifier que les 7 niveaux de spacing sont définis
-//  * 2. Afficher les 7 valeurs dans la console
-//  * 3. Afficher visuellement les espacements
-//  * 4. Comprendre chaque niveau et son utilité
-//  *
-//  * ✅ TESTABLE :
-//  * • Console logs affichant les 7 valeurs
-//  * • Visuel montrant les espacements progressifs
-//  * • Pas d'erreur de compilation
-//  */
-
-// Window {
-//     id: mainWindow
-//     visible: true
-//     width: 800
-//     height: 600
-//     title: "Test Étape 1.3.1 - Espacement Statique ✅"
-
-//     // ═══════════════════════════════════════════════════════════
-//     // LOGS DE DEBUG - Vérifier les valeurs
-//     // ═══════════════════════════════════════════════════════════
-
-//     Component.onCompleted: {
-//         console.log(`
-// ╔═══════════════════════════════════════════════════════════════╗
-// ║ ✅ ÉTAPE 1.3.1 : ESPACEMENT STATIQUE - 7 NIVEAUX           ║
-// ╠═══════════════════════════════════════════════════════════════╣
-// ║ Les 7 niveaux d'espacement disponibles :
-// ║
-// ║ Niveau │ Valeur │ Utilisation
-// ║────────┼────────┼──────────────────────────────────────────
-// ║ xs     │ ${ResponsiveConfig.spacing.xs}px    │ Micro-spacing (bordures)
-// ║ sm     │ ${ResponsiveConfig.spacing.sm}px    │ Petit padding
-// ║ md     │ ${ResponsiveConfig.spacing.md}px   │ Padding standard
-// ║ lg     │ ${ResponsiveConfig.spacing.lg}px   │ Marge moyen
-// ║ xl     │ ${ResponsiveConfig.spacing.xl}px   │ Marge grand
-// ║ xxl    │ ${ResponsiveConfig.spacing.xxl}px   │ Marge très grand
-// ║ xxxl   │ ${ResponsiveConfig.spacing.xxxl}px   │ Marge énorme
-// ║
-// ║ 📊 Progression : 4 → 8 → 12 → 16 → 20 → 24 → 32
-// ║
-// ║ ✅ Si tu vois ces 7 valeurs → Étape 1.3.1 réussie !
-// ╚═══════════════════════════════════════════════════════════════╝
-//         `)
-//     }
-
-//     Rectangle {
-//         anchors.fill: parent
-//         color: "#0f1419"
-
-//         Column {
-//             anchors.fill: parent
-//             anchors.margins: 16
-//             spacing: 12
-
-//             // ═══════════════════════════════════════════════════════════
-//             // SECTION 1 : TITRE
-//             // ═══════════════════════════════════════════════════════════
-
-//             Text {
-//                 color: "#f3f4f6"
-//                 font.pixelSize: 22
-//                 font.bold: true
-//                 text: "Étape 1.3.1 : Espacement Statique ✅"
-//             }
-
-//             Text {
-//                 color: "#9ca3af"
-//                 font.pixelSize: 12
-//                 text: "Les 7 niveaux d'espacement définis dans ResponsiveConfig.spacing"
-//             }
-
-//             // ═══════════════════════════════════════════════════════════
-//             // SECTION 2 : TABLEAU DES VALEURS
-//             // ═══════════════════════════════════════════════════════════
-
-//             Rectangle {
-//                 width: parent.width
-//                 height: 250
-//                 color: "#1f2937"
-//                 radius: 8
-
-//                 Column {
-//                     anchors.fill: parent
-//                     anchors.margins: 12
-//                     spacing: 8
-
-//                     Text {
-//                         color: "#f3f4f6"
-//                         font.pixelSize: 14
-//                         font.bold: true
-//                         text: "📊 Les 7 niveaux avec leurs valeurs :"
-//                     }
-
-//                     // Grille des espacements
-//                     Column {
-//                         width: parent.width
-//                         spacing: 6
-
-//                         // xs
-//                         Row {
-//                             width: parent.width
-//                             spacing: 12
-
-//                             Text {
-//                                 width: 50
-//                                 color: "#60a5fa"
-//                                 font.pixelSize: 12
-//                                 font.bold: true
-//                                 text: "xs"
-//                             }
-
-//                             Rectangle {
-//                                 width: ResponsiveConfig.spacing.xs
-//                                 height: 20
-//                                 color: "#6366f1"
-//                                 radius: 2
-//                             }
-
-//                             Text {
-//                                 color: "#d1d5db"
-//                                 font.pixelSize: 11
-//                                 text: `${ResponsiveConfig.spacing.xs}px - Micro-spacing`
-//                             }
-//                         }
-
-//                         // sm
-//                         Row {
-//                             width: parent.width
-//                             spacing: 12
-
-//                             Text {
-//                                 width: 50
-//                                 color: "#60a5fa"
-//                                 font.pixelSize: 12
-//                                 font.bold: true
-//                                 text: "sm"
-//                             }
-
-//                             Rectangle {
-//                                 width: ResponsiveConfig.spacing.sm
-//                                 height: 20
-//                                 color: "#6366f1"
-//                                 radius: 2
-//                             }
-
-//                             Text {
-//                                 color: "#d1d5db"
-//                                 font.pixelSize: 11
-//                                 text: `${ResponsiveConfig.spacing.sm}px - Petit padding`
-//                             }
-//                         }
-
-//                         // md
-//                         Row {
-//                             width: parent.width
-//                             spacing: 12
-
-//                             Text {
-//                                 width: 50
-//                                 color: "#60a5fa"
-//                                 font.pixelSize: 12
-//                                 font.bold: true
-//                                 text: "md"
-//                             }
-
-//                             Rectangle {
-//                                 width: ResponsiveConfig.spacing.md
-//                                 height: 20
-//                                 color: "#6366f1"
-//                                 radius: 2
-//                             }
-
-//                             Text {
-//                                 color: "#d1d5db"
-//                                 font.pixelSize: 11
-//                                 text: `${ResponsiveConfig.spacing.md}px - Padding standard`
-//                             }
-//                         }
-
-//                         // lg
-//                         Row {
-//                             width: parent.width
-//                             spacing: 12
-
-//                             Text {
-//                                 width: 50
-//                                 color: "#60a5fa"
-//                                 font.pixelSize: 12
-//                                 font.bold: true
-//                                 text: "lg"
-//                             }
-
-//                             Rectangle {
-//                                 width: ResponsiveConfig.spacing.lg
-//                                 height: 20
-//                                 color: "#6366f1"
-//                                 radius: 2
-//                             }
-
-//                             Text {
-//                                 color: "#d1d5db"
-//                                 font.pixelSize: 11
-//                                 text: `${ResponsiveConfig.spacing.lg}px - Marge moyen`
-//                             }
-//                         }
-
-//                         // xl
-//                         Row {
-//                             width: parent.width
-//                             spacing: 12
-
-//                             Text {
-//                                 width: 50
-//                                 color: "#60a5fa"
-//                                 font.pixelSize: 12
-//                                 font.bold: true
-//                                 text: "xl"
-//                             }
-
-//                             Rectangle {
-//                                 width: ResponsiveConfig.spacing.xl
-//                                 height: 20
-//                                 color: "#6366f1"
-//                                 radius: 2
-//                             }
-
-//                             Text {
-//                                 color: "#d1d5db"
-//                                 font.pixelSize: 11
-//                                 text: `${ResponsiveConfig.spacing.xl}px - Marge grand`
-//                             }
-//                         }
-
-//                         // xxl
-//                         Row {
-//                             width: parent.width
-//                             spacing: 12
-
-//                             Text {
-//                                 width: 50
-//                                 color: "#60a5fa"
-//                                 font.pixelSize: 12
-//                                 font.bold: true
-//                                 text: "xxl"
-//                             }
-
-//                             Rectangle {
-//                                 width: ResponsiveConfig.spacing.xxl
-//                                 height: 20
-//                                 color: "#6366f1"
-//                                 radius: 2
-//                             }
-
-//                             Text {
-//                                 color: "#d1d5db"
-//                                 font.pixelSize: 11
-//                                 text: `${ResponsiveConfig.spacing.xxl}px - Marge très grand`
-//                             }
-//                         }
-
-//                         // xxxl
-//                         Row {
-//                             width: parent.width
-//                             spacing: 12
-
-//                             Text {
-//                                 width: 50
-//                                 color: "#60a5fa"
-//                                 font.pixelSize: 12
-//                                 font.bold: true
-//                                 text: "xxxl"
-//                             }
-
-//                             Rectangle {
-//                                 width: ResponsiveConfig.spacing.xxxl
-//                                 height: 20
-//                                 color: "#6366f1"
-//                                 radius: 2
-//                             }
-
-//                             Text {
-//                                 color: "#d1d5db"
-//                                 font.pixelSize: 11
-//                                 text: `${ResponsiveConfig.spacing.xxxl}px - Marge énorme`
-//                             }
-//                         }
-//                     }
-//                 }
-//             }
-
-//             // ═══════════════════════════════════════════════════════════
-//             // SECTION 3 : PROGRESSION VISUELLE
-//             // ═══════════════════════════════════════════════════════════
-
-//             Text {
-//                 color: "#f3f4f6"
-//                 font.pixelSize: 14
-//                 font.bold: true
-//                 text: "📈 Progression visuelle (du plus petit au plus grand) :"
-//             }
-
-//             Rectangle {
-//                 width: parent.width
-//                 height: 200
-//                 color: "#1f2937"
-//                 radius: 8
-
-//                 Column {
-//                     anchors.fill: parent
-//                     anchors.margins: 12
-//                     anchors.left: parent.left
-//                     anchors.leftMargin: 12
-//                     spacing: 8
-
-//                     // Chaque carré représente un niveau
-//                     Row {
-//                         spacing: 0
-
-//                         Rectangle {
-//                             width: 20 + ResponsiveConfig.spacing.xs * 4
-//                             height: 40
-//                             color: "#6366f1"
-//                             radius: 4
-
-//                             Text {
-//                                 anchors.centerIn: parent
-//                                 color: "white"
-//                                 font.pixelSize: 10
-//                                 text: "xs"
-//                             }
-//                         }
-
-//                         Rectangle {
-//                             width: 20 + ResponsiveConfig.spacing.sm * 4
-//                             height: 40
-//                             color: "#8b5cf6"
-//                             radius: 4
-
-//                             Text {
-//                                 anchors.centerIn: parent
-//                                 color: "white"
-//                                 font.pixelSize: 10
-//                                 text: "sm"
-//                             }
-//                         }
-
-//                         Rectangle {
-//                             width: 20 + ResponsiveConfig.spacing.md * 4
-//                             height: 40
-//                             color: "#a78bfa"
-//                             radius: 4
-
-//                             Text {
-//                                 anchors.centerIn: parent
-//                                 color: "white"
-//                                 font.pixelSize: 10
-//                                 text: "md"
-//                             }
-//                         }
-
-//                         Rectangle {
-//                             width: 20 + ResponsiveConfig.spacing.lg * 4
-//                             height: 40
-//                             color: "#c4b5fd"
-//                             radius: 4
-
-//                             Text {
-//                                 anchors.centerIn: parent
-//                                 color: "white"
-//                                 font.pixelSize: 10
-//                                 text: "lg"
-//                             }
-//                         }
-
-//                         Rectangle {
-//                             width: 20 + ResponsiveConfig.spacing.xl * 4
-//                             height: 40
-//                             color: "#ddd6fe"
-//                             radius: 4
-
-//                             Text {
-//                                 anchors.centerIn: parent
-//                                 color: "#1f2937"
-//                                 font.pixelSize: 10
-//                                 text: "xl"
-//                             }
-//                         }
-//                     }
-//                 }
-//             }
-
-//             // ═══════════════════════════════════════════════════════════
-//             // SECTION 4 : MESSAGES DE VALIDATION
-//             // ═══════════════════════════════════════════════════════════
-
-//             Rectangle {
-//                 width: parent.width
-//                 height: 60
-//                 color: "#047857"
-//                 radius: 6
-
-//                 Column {
-//                     anchors.fill: parent
-//                     anchors.margins: 10
-//                     spacing: 4
-
-//                     Text {
-//                         color: "#ecfdf5"
-//                         font.pixelSize: 12
-//                         font.bold: true
-//                         text: "✅ ÉTAPE 1.3.1 RÉUSSIE !"
-//                     }
-
-//                     Text {
-//                         color: "#d1fae5"
-//                         font.pixelSize: 10
-//                         text: "Les 7 niveaux d'espacement sont définis et affichés ✓"
-//                     }
-
-//                     Text {
-//                         color: "#d1fae5"
-//                         font.pixelSize: 10
-//                         text: "Vérifiez la console pour les valeurs complètes"
-//                     }
-//                 }
-//             }
-//         }
-//     }
-// }
-

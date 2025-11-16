@@ -1,6 +1,8 @@
 pragma Singleton
+
 import Felgo 4.0
 import QtQuick 2.15
+
 
 /**
  * ResponsiveConfig - Singleton de configuration responsive
@@ -10,32 +12,14 @@ import QtQuick 2.15
  *   déclenchent un changement de layout)
  * - Calcul du nombre de colonnes par taille d'écran
  * - Espacement standardisé en 7 niveaux
+ * - Calcul adaptatif de largeur de colonne
  */
-
 QtObject {
     id: root
-    
-    // Facteur de densité : convertit pixels en device-independent pixels
-    // Permet que les tailles soient adaptées au DPI de l'écran
-    // readonly property real dp: Screen.pixelDensity / 160
-
-    // /**
-    //  * Convertit des pixels réels en dp (device-independent pixels)
-    //  *
-    //  * @param pixels - Valeur en pixels réels
-    //  * @return Valeur équivalente en dp
-    //  *
-    //  * Exemple : 390px sur iPhone (DPI 326)
-    //  * → 390 * 0.02 = 7.8 dp
-    //  */
-    // function pixelsToDp(pixels) {
-    //     return pixels * root.dp
-    // }
 
     // ============================================
     // BREAKPOINTS (seuils de largeur)
     // ============================================
-
     readonly property QtObject breakpoints: QtObject {
         // Mobile petit (iPhone SE, vieux téléphones)
         readonly property real mobileSmall: 320
@@ -59,7 +43,6 @@ QtObject {
     // ============================================
     // CONFIGURATION GRILLE (nombre de colonnes)
     // ============================================
-
     readonly property QtObject gridConfig: QtObject {
         // Mobile : priorité à la lisibilité
         readonly property int mobileSmallColumns: 2
@@ -74,60 +57,86 @@ QtObject {
         readonly property int desktopLargeColumns: 6
     }
 
-
     // ============================================
     // FONCTION : Nombre de colonnes optimal
     // ============================================
+
 
     /**
      * Retourne le nombre de colonnes adapté à une largeur d'écran
      *
      * @param width - Largeur en pixels réels
      * @return Nombre de colonnes optimal
-     *
      */
     function getColumnCount(width) {
         if (width < root.breakpoints.tabletPortrait) {
             return root.gridConfig.mobileNormalColumns
-        }
-        else if (width < root.breakpoints.tabletLandscape) {
+        } else if (width < root.breakpoints.tabletLandscape) {
             return root.gridConfig.tabletPortraitColumns
-        }
-        else if (width < root.breakpoints.desktop) {
+        } else if (width < root.breakpoints.desktop) {
             return root.gridConfig.tabletLandscapeColumns
-        }
-        else if (width < root.breakpoints.desktopLarge) {
+        } else if (width < root.breakpoints.desktopLarge) {
             return root.gridConfig.desktopColumns
-        }
-        else {
+        } else {
             return root.gridConfig.desktopLargeColumns
         }
     }
 
-    
     // ============================================
     // FONCTION : Largeur d'une colonne
     // ============================================
 
+
     /**
      * Calcule la largeur réelle d'une colonne
      *
+     * @param containerWidth - Largeur totale disponible (pixels)
+     * @param columnCount - Nombre de colonnes
+     * @param itemSpacing - Espacement entre items (pixels)
+     * @return Largeur d'une colonne (pixels)
+     *
      * Formule : (largeur totale - espacements) / nombre de colonnes
      *
-     * Exemple : Tablet portrait (720px, 3 colonnes, 12px espacement)
-     * (720 - 24) / 3 = 232px par colonne
+     * Exemples :
+     * - Desktop (1880px, 5 col, 16px spacing) :
+     *   (1880 - (5-1)*16) / 5 = 352px
+     *
+     * - Tablet (720px, 3 col, 12px spacing) :
+     *   (720 - (3-1)*12) / 3 = 232px
+     *
+     * - Mobile (390px, 2 col, 8px spacing) :
+     *   (390 - (2-1)*8) / 2 = 191px
      */
-    function calculateColumnWidth(containerWidth, columnCount) {
-        const itemSpacing = 12
-        const cols = columnCount || root.getColumnCount(containerWidth)
-        const totalSpacing = Math.max(0, (cols - 1) * itemSpacing)
-        return (containerWidth - totalSpacing) / cols
+    function calculateColumnWidth(containerWidth, columnCount, itemSpacing) {
+        // VALIDATION : Garder-fous pour éviter erreurs
+        if (containerWidth <= 0 || columnCount <= 0 || itemSpacing < 0) {
+            console.warn("⚠️ calculateColumnWidth: paramètres invalides",
+                         "| width:", containerWidth.toFixed(0), "px | cols:",
+                         columnCount, "| spacing:",
+                         itemSpacing.toFixed(1), "px")
+            return 0
+        }
+
+        const totalSpacing = Math.max(0, (columnCount - 1) * itemSpacing)
+        const availableWidth = containerWidth - totalSpacing
+        const columnWidth = availableWidth / columnCount
+
+        // SÉCURITÉ : Largeur minimale de 50px
+        const finalWidth = Math.max(columnWidth, 50)
+
+        // DEBUG : Logs pour validation
+        if (finalWidth < 100) {
+            console.warn("⚠️ calculateColumnWidth: largeur très petite",
+                         "width:", finalWidth.toFixed(1), "px",
+                         "(minimum recommandé : 100px)")
+        }
+
+        return finalWidth
     }
 
     // ============================================
     // ESPACEMENT (7 niveaux)
     // ============================================
-
     readonly property QtObject spacing: QtObject {
         // Micro-espacement (bordures, traits fins)
         readonly property real xs: 4
@@ -162,15 +171,14 @@ QtObject {
         function getContentMargin(availableWidth) {
 
             if (availableWidth < root.breakpoints.tabletPortrait) {
-                return sm  // Mobile
-            }
-            else if (availableWidth < root.breakpoints.desktop) {
-                return lg  // Tablet
-            }
-            else {
-                return xl  // Desktop
+                return sm // Mobile
+            } else if (availableWidth < root.breakpoints.desktop) {
+                return lg // Tablet
+            } else {
+                return xl // Desktop
             }
         }
+
 
         /**
          * Espacement adaptatif entre items grille
@@ -182,13 +190,11 @@ QtObject {
         */
         function getItemSpacing(availableWidth) {
             if (availableWidth < root.breakpoints.tabletPortrait) {
-                return sm  // Mobile
-            }
-            else if (availableWidth < root.breakpoints.desktop) {
-                return md  // Tablet
-            }
-            else {
-                return lg  // Desktop
+                return sm // Mobile
+            } else if (availableWidth < root.breakpoints.desktop) {
+                return md // Tablet
+            } else {
+                return lg // Desktop
             }
         }
     }

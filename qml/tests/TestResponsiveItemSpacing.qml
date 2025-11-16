@@ -3,13 +3,13 @@ import QtQuick 2.15
 
 import "../config"
 
+
 /**
  * TestResponsiveItemSpacing - Test getItemSpacing() adaptatif
  *
  * Affiche une GridView avec espacement adaptatif selon la taille d'écran
  * Mobile : 8px | Tablet : 12px | Desktop : 16px
  */
-
 AppPage {
     id: testPage
     title: "Test - Item Spacing Adaptatif"
@@ -19,18 +19,19 @@ AppPage {
         anchors.fill: parent
         contentHeight: column.height
         contentWidth: width
-        anchors.margins: dp(ResponsiveConfig.spacing.getContentMargin(testPage.width))
+        anchors.margins: dp(ResponsiveConfig.spacing.getContentMargin(
+                                testPage.width))
 
         Column {
             id: column
             width: parent.width
-            anchors.margins: dp(ResponsiveConfig.spacing.getContentMargin(testPage.width))
+            anchors.margins: dp(ResponsiveConfig.spacing.getContentMargin(
+                                    testPage.width))
             spacing: dp(12)
 
             // ════════════════════════════════════════════════════════
             // EN-TÊTE
             // ════════════════════════════════════════════════════════
-
             Text {
                 color: "#111827"
                 font.pixelSize: sp(18)
@@ -46,12 +47,14 @@ AppPage {
                 width: parent.width
             }
 
-            Item { width: 1; height: dp(8) }
+            Item {
+                width: 1
+                height: dp(8)
+            }
 
             // ════════════════════════════════════════════════════════
             // INFORMATIONS ACTUELLES
             // ════════════════════════════════════════════════════════
-
             Text {
                 color: "#1f2937"
                 font.pixelSize: sp(13)
@@ -112,7 +115,7 @@ AppPage {
                         }
                     }
 
-                    // Colonnes et espacement
+                    // Colonnes, espacement, et largeur colonne
                     Row {
                         width: parent.width
                         spacing: dp(20)
@@ -130,7 +133,8 @@ AppPage {
                                 color: "#1f2937"
                                 font.pixelSize: sp(12)
                                 font.bold: true
-                                text: ResponsiveConfig.getColumnCount(testGrid.width) + " col"
+                                text: ResponsiveConfig.getColumnCount(
+                                          testGrid.width) + " col"
                             }
                         }
 
@@ -147,19 +151,35 @@ AppPage {
                                 color: "#1f2937"
                                 font.pixelSize: sp(12)
                                 font.bold: true
-                                text: ResponsiveConfig.spacing.getItemSpacing(testPage.width).toFixed(1) + " px"
+                                text: ResponsiveConfig.spacing.getItemSpacing(
+                                          testPage.width).toFixed(1) + " px"
+                            }
+                        }
+
+                        Column {
+                            spacing: dp(3)
+
+                            Text {
+                                color: "#4b5563"
+                                font.pixelSize: sp(10)
+                                text: "Largeur colonne"
+                            }
+
+                            Text {
+                                color: "#1f2937"
+                                font.pixelSize: sp(12)
+                                font.bold: true
+                                text: getColumnWidth(testPage.width).toFixed(
+                                          1) + " px"
                             }
                         }
                     }
                 }
             }
 
-            Item { width: 1; height: dp(12) }
-
             // ════════════════════════════════════════════════════════
             // EXPLICATION
             // ════════════════════════════════════════════════════════
-
             Rectangle {
                 width: parent.width
                 height: dp(85)
@@ -190,12 +210,9 @@ AppPage {
                 }
             }
 
-            Item { width: 1; height: dp(12) }
-
             // ════════════════════════════════════════════════════════
             // TABLEAU DE CORRESPONDANCE
             // ════════════════════════════════════════════════════════
-
             Text {
                 color: "#1f2937"
                 font.pixelSize: sp(13)
@@ -231,7 +248,13 @@ AppPage {
                         Text {
                             color: "#4b5563"
                             font.pixelSize: sp(10)
-                            text: "Espacement : 8px  |  Colonnes : 2"
+                            text: "Espacement : 8px  |  Colonnes : 2  |  Largeur colonne : ~191px"
+                        }
+
+                        Text {
+                            color: "#6b7280"
+                            font.pixelSize: sp(9)
+                            text: "Formule : (390 - 8) / 2 = 191px"
                         }
 
                         Text {
@@ -266,7 +289,13 @@ AppPage {
                         Text {
                             color: "#4b5563"
                             font.pixelSize: sp(10)
-                            text: "Espacement : 12px  |  Colonnes : 3-4"
+                            text: "Espacement : 12px  |  Colonnes : 3-4  |  Largeur colonne : ~232px"
+                        }
+
+                        Text {
+                            color: "#6b7280"
+                            font.pixelSize: sp(9)
+                            text: "Formule : (720 - 24) / 3 = 232px"
                         }
 
                         Text {
@@ -301,7 +330,13 @@ AppPage {
                         Text {
                             color: "#4b5563"
                             font.pixelSize: sp(10)
-                            text: "Espacement : 16px  |  Colonnes : 5-6"
+                            text: "Espacement : 16px  |  Colonnes : 5-6  |  Largeur colonne : ~352px"
+                        }
+
+                        Text {
+                            color: "#6b7280"
+                            font.pixelSize: sp(9)
+                            text: "Formule : (1880 - 64) / 5 = 363px"
                         }
 
                         Text {
@@ -313,13 +348,9 @@ AppPage {
                 }
             }
 
-            Item { width: 1; height: dp(12) }
-
-
             // ════════════════════════════════════════════════════════
             // CONSEIL
             // ════════════════════════════════════════════════════════
-
             Rectangle {
                 width: parent.width
                 height: dp(65)
@@ -350,12 +381,9 @@ AppPage {
                 }
             }
 
-            Item { width: 1; height: dp(20) }
-
             // ════════════════════════════════════════════════════════
             // GRILLE AVEC ESPACEMENT ADAPTATIF
             // ════════════════════════════════════════════════════════
-
             Text {
                 color: "#1f2937"
                 font.pixelSize: sp(13)
@@ -378,25 +406,27 @@ AppPage {
                     anchors.margins: dp(12)
 
                     // anchors.horizontalCenter: parent.horizontalCenter
-
                     interactive: false
 
-                    property real itemSpacing: ResponsiveConfig.spacing.getItemSpacing(testGrid.width)
-                    property int columnCount: ResponsiveConfig.getColumnCount(testGrid.width)
+                    property real itemSpacing: ResponsiveConfig.spacing.getItemSpacing(
+                                                   testGrid.width)
+                    property int columnCount: ResponsiveConfig.getColumnCount(
+                                                  testGrid.width)
 
-                    // cellWidth: ResponsiveConfig.calculateColumnWidth(testGrid.width, columnCount) + itemSpacing
-                    // cellHeight: cellWidth * (4/3)
+                    cellWidth: ResponsiveConfig.calculateColumnWidth(
+                                   width, columnCount, itemSpacing)
 
-                    cellWidth: {
-                        if (width <= 0 || columnCount <= 0) return 100
-                        const spacing = (columnCount - 1) * itemSpacing
-                        const calc = (width - spacing) / columnCount
-                        return Math.max(calc, 50)
-                    }
-
+                    // Aproche bonne lorsqu'on considirère les performances (recalcul constant)
+                    // cellWidth: {
+                    //     if (width <= 0 || columnCount <= 0) return 100
+                    //     const spacing = (columnCount - 1) * itemSpacing
+                    //     const calc = (width - spacing) / columnCount
+                    //     return Math.max(calc, 50)
+                    // }
                     cellHeight: {
-                        if (cellWidth <= 0) return 67
-                        return Math.max(cellWidth * (4/3), 67)
+                        if (cellWidth <= 0)
+                            return 67
+                        return Math.max(cellWidth * (4 / 3), 67)
                     }
 
                     model: 12
@@ -408,24 +438,23 @@ AppPage {
                         console.log("columnCount:", columnCount)
                         console.log("cellWidth:", cellWidth)
                         console.log("cellHeight:", cellHeight)
-                        console.log("Calcul colonnes possibles:", Math.floor(width / cellWidth))
+                        console.log("Calcul colonnes possibles:",
+                                    Math.floor(width / cellWidth))
                     }
 
                     delegate: Rectangle {
                         width: testGrid.cellWidth - testGrid.itemSpacing * 0.5
-                        height: testGrid.cellHeight - testGrid.itemSpacing * 0.5 // O.5 pour espacement des 2 côtés
+                        height: testGrid.cellHeight - testGrid.itemSpacing
+                                * 0.5 // O.5 pour espacement des 2 côtés
 
                         color: "#6366f1"
                         radius: dp(6)
 
                         // anchors.centerIn: parent  // c'est à cause de lui que je ne voyais qu'une seule carte...
-
                         Component.onCompleted: {
                             console.log("=== GRIDVIEW DEBUG ===")
-                            console.log("Carte", index + 1,
-                                        "- width:", width,
-                                        "- height:", height,
-                                        "- x:", x,
+                            console.log("Carte", index + 1, "- width:", width,
+                                        "- height:", height, "- x:", x,
                                         "- y:", y)
                         }
 
@@ -460,14 +489,23 @@ AppPage {
                     }
                 }
             }
-
-            Item { width: 1; height: dp(12) }
         }
     }
 
     // ════════════════════════════════════════════════════════
     // FONCTION UTILITAIRE
     // ════════════════════════════════════════════════════════
+
+
+    /**
+     * Retourne la largeur de colonne calculée
+     */
+    function getColumnWidth(width) {
+        const cols = ResponsiveConfig.getColumnCount(width)
+        const spacing = ResponsiveConfig.spacing.getItemSpacing(width)
+        return ResponsiveConfig.calculateColumnWidth(width, cols, spacing)
+    }
+
 
     /**
      * Retourne le type d'écran selon la largeur
@@ -488,12 +526,15 @@ AppPage {
     // ════════════════════════════════════════════════════════
     // LOGS DE VALIDATION
     // ════════════════════════════════════════════════════════
-
     Component.onCompleted: {
         console.log("✅ Test - Item Spacing Adaptatif")
         console.log("Largeur écran :", testPage.width.toFixed(0), "px")
         console.log("Type écran :", getDeviceType(testPage.width))
-        console.log("Colonnes :", ResponsiveConfig.getColumnCount(testGrid.width))
-        console.log("Item Spacing :", ResponsiveConfig.spacing.getItemSpacing(testPage.width).toFixed(1), "px")
+        console.log("Colonnes :",
+                    ResponsiveConfig.getColumnCount(testGrid.width))
+        console.log("Item Spacing :", ResponsiveConfig.spacing.getItemSpacing(
+                        testPage.width).toFixed(1), "px")
+        console.log("Largeur colonne:",
+                    getColumnWidth(testPage.width).toFixed(1), "px")
     }
 }

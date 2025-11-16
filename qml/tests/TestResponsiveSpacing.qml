@@ -3,13 +3,13 @@ import QtQuick 2.15
 
 import "../config"
 
+
 /**
  * TestResponsiveSpacing - Test des 7 niveaux d'espacement
  *
  * Affiche visuellement les 7 niveaux d'espacement avec des barres de taille proportionnelle
  * Permet de valider que les espacements responsive sont corrects sur tous les appareils
  */
-
 AppPage {
     id: testPage
     title: "Test - Spacing"
@@ -30,7 +30,6 @@ AppPage {
             // ════════════════════════════════════════════════════════
             // EN-TÊTE
             // ════════════════════════════════════════════════════════
-
             Text {
                 color: "#111827"
                 font.pixelSize: sp(18)
@@ -71,7 +70,8 @@ AppPage {
                         color: "#4b5563"
                         font.pixelSize: sp(10)
                         width: dp(60)
-                        text: "xs (" + ResponsiveConfig.spacing.xs.toFixed(1) + "px)"
+                        text: "xs (" + ResponsiveConfig.spacing.xs.toFixed(
+                                  1) + "px)"
                     }
 
                     Rectangle {
@@ -110,7 +110,8 @@ AppPage {
                         color: "#4b5563"
                         font.pixelSize: sp(10)
                         width: dp(60)
-                        text: "sm (" + ResponsiveConfig.spacing.sm.toFixed(1) + "px)"
+                        text: "sm (" + ResponsiveConfig.spacing.sm.toFixed(
+                                  1) + "px)"
                     }
 
                     Rectangle {
@@ -148,7 +149,8 @@ AppPage {
                         color: "#4b5563"
                         font.pixelSize: sp(10)
                         width: dp(60)
-                        text: "md (" + ResponsiveConfig.spacing.md.toFixed(1) + "px)"
+                        text: "md (" + ResponsiveConfig.spacing.md.toFixed(
+                                  1) + "px)"
                     }
 
                     Rectangle {
@@ -186,7 +188,8 @@ AppPage {
                         color: "#4b5563"
                         font.pixelSize: sp(10)
                         width: dp(60)
-                        text: "lg (" + ResponsiveConfig.spacing.lg.toFixed(1) + "px)"
+                        text: "lg (" + ResponsiveConfig.spacing.lg.toFixed(
+                                  1) + "px)"
                     }
 
                     Rectangle {
@@ -224,7 +227,8 @@ AppPage {
                         color: "#4b5563"
                         font.pixelSize: sp(10)
                         width: dp(60)
-                        text: "xl (" + ResponsiveConfig.spacing.xl.toFixed(1) + "px)"
+                        text: "xl (" + ResponsiveConfig.spacing.xl.toFixed(
+                                  1) + "px)"
                     }
 
                     Rectangle {
@@ -262,7 +266,8 @@ AppPage {
                         color: "#4b5563"
                         font.pixelSize: sp(10)
                         width: dp(60)
-                        text: "xxl (" + ResponsiveConfig.spacing.xxl.toFixed(1) + "px)"
+                        text: "xxl (" + ResponsiveConfig.spacing.xxl.toFixed(
+                                  1) + "px)"
                     }
 
                     Rectangle {
@@ -300,7 +305,8 @@ AppPage {
                         color: "#4b5563"
                         font.pixelSize: sp(10)
                         width: dp(60)
-                        text: "xxxl (" + ResponsiveConfig.spacing.xxxl.toFixed(1) + "px)"
+                        text: "xxxl (" + ResponsiveConfig.spacing.xxxl.toFixed(
+                                  1) + "px)"
                     }
 
                     Rectangle {
@@ -318,14 +324,16 @@ AppPage {
                 }
             }
 
-            Item { width: 1; height: dp(20) }
+            Item {
+                width: 1
+                height: dp(20)
+            }
         }
     }
 
     // ════════════════════════════════════════════════════════
     // LOGS DE VALIDATION
     // ════════════════════════════════════════════════════════
-
     Component.onCompleted: {
         console.log("Test - 7 Niveaux d'Espacement")
         console.log("xs:", ResponsiveConfig.spacing.xs.toFixed(2), "px")

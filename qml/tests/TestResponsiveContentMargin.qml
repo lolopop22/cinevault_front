@@ -4,13 +4,13 @@ import QtQuick.Layouts
 
 import "../config"
 
+
 /**
  * TestResponsiveContentMargin - Test getContentMargin() adaptatif
  *
  * Affiche comment les marges du conteneur s'adaptent selon la largeur d'écran
  * Mobile : 8px | Tablet : 16px | Desktop : 20px
  */
-
 AppPage {
     id: testPage
     title: "Test - Content Margin Adaptatif"
@@ -20,18 +20,19 @@ AppPage {
         anchors.fill: parent
         contentHeight: column.height
         contentWidth: width
-        anchors.margins: dp(ResponsiveConfig.spacing.getContentMargin(testPage.width))
+        anchors.margins: dp(ResponsiveConfig.spacing.getContentMargin(
+                                testPage.width))
 
         Column {
             id: column
             width: parent.width
-            anchors.margins: dp(ResponsiveConfig.spacing.getContentMargin(testPage.width))
+            anchors.margins: dp(ResponsiveConfig.spacing.getContentMargin(
+                                    testPage.width))
             spacing: dp(12)
 
             // ════════════════════════════════════════════════════════
             // EN-TÊTE
             // ════════════════════════════════════════════════════════
-
             Text {
                 color: "#111827"
                 width: parent.width
@@ -52,7 +53,6 @@ AppPage {
             // ════════════════════════════════════════════════════════
             // INFORMATIONS ACTUELLES
             // ════════════════════════════════════════════════════════
-
             Text {
                 color: "#1f2937"
                 font.pixelSize: sp(13)
@@ -105,7 +105,8 @@ AppPage {
                             color: "#1f2937"
                             font.pixelSize: sp(11)
                             font.bold: true
-                            text: ResponsiveConfig.spacing.getContentMargin(testPage.width).toFixed(1) + " px"
+                            text: ResponsiveConfig.spacing.getContentMargin(
+                                      testPage.width).toFixed(1) + " px"
                         }
                     }
 
@@ -132,7 +133,6 @@ AppPage {
             // ════════════════════════════════════════════════════════
             // EXPLICATION
             // ════════════════════════════════════════════════════════
-
             Rectangle {
                 width: parent.width
                 height: dp(90)
@@ -166,7 +166,6 @@ AppPage {
             // ════════════════════════════════════════════════════════
             // TABLEAU DE CORRESPONDANCE
             // ════════════════════════════════════════════════════════
-
             Text {
                 color: "#1f2937"
                 font.pixelSize: sp(13)
@@ -284,12 +283,14 @@ AppPage {
                 }
             }
 
-            Item { width: 1; height: dp(12) }
+            Item {
+                width: 1
+                height: dp(12)
+            }
 
             // ════════════════════════════════════════════════════════
             // CONSEIL
             // ════════════════════════════════════════════════════════
-
             Rectangle {
                 width: parent.width
                 height: dp(60)
@@ -320,13 +321,17 @@ AppPage {
                 }
             }
 
-            Item { width: 1; height: dp(20) }
+            Item {
+                width: 1
+                height: dp(20)
+            }
         }
     }
 
     // ════════════════════════════════════════════════════════
     // FONCTION UTILITAIRE
     // ════════════════════════════════════════════════════════
+
 
     /**
      * Retourne le type d'écran selon la largeur
@@ -344,11 +349,12 @@ AppPage {
     // ════════════════════════════════════════════════════════
     // LOGS DE VALIDATION
     // ════════════════════════════════════════════════════════
-
     Component.onCompleted: {
         console.log("✅ Test - Content Margin Adaptatif")
         console.log("Largeur écran :", testPage.width.toFixed(0), "px")
-        console.log("Marge appliquée (mais on utilise le dp en plus):", ResponsiveConfig.spacing.getContentMargin(testPage.width).toFixed(1), "px")
+        console.log("Marge appliquée (mais on utilise le dp en plus):",
+                    ResponsiveConfig.spacing.getContentMargin(
+                        testPage.width).toFixed(1), "px")
         console.log("Type écran :", getDeviceType())
     }
 }
