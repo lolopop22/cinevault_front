@@ -316,7 +316,7 @@ AppPage {
                anchors.top: parent.top
                anchors.bottom: parent.bottom
 
-               width: gridTotalWidth
+               width: dp(gridTotalWidth)
 
                // ════════════════════════════════════════════════════════
                // DIMENSIONS RESPONSIVE
@@ -336,7 +336,7 @@ AppPage {
                 * Formule dans ResponsiveConfig :
                 * (width - totalSpacing) / columnCount
                 */
-               cellWidth: columnWidth + itemSpacing
+               cellWidth: dp(columnWidth + itemSpacing)
 
 
                /**
@@ -349,7 +349,7 @@ AppPage {
                 * - Espace titre : 40px
                 * - Total : columnWidth × 1.5 + 40
                 */
-               cellHeight: cataloguePage.cellHeight
+               cellHeight: dp(cataloguePage.cellHeight)
 
                model: Model.FilmDataSingletonModel
                       && Model.FilmDataSingletonModel.films ? Model.FilmDataSingletonModel.films : []
@@ -411,8 +411,8 @@ AppPage {
                delegate: Rectangle {
                     id: filmCard
 
-                    width: columnWidth
-                    height: cataloguePage.cellHeight - dp(4)
+                    width: dp(columnWidth)
+                    height: dp(cataloguePage.cellHeight - 4)
 
                     // ════════════════════════════════════════════════════════
                     // STYLE AMÉLIORÉ
@@ -625,10 +625,10 @@ AppPage {
                           * - Visibility tracking
                           */
                          Components.PosterImage {
-                              width: parent.width
+                              width: dp(parent.width)
 
                               // Respect du ratio cinéma et utilisation de la largeur fixe
-                              height: width * poster_aspect_ratio
+                              height: dp(width * poster_aspect_ratio)
 
                               source: modelData ? modelData.poster_url : ""
 

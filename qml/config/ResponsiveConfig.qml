@@ -1,5 +1,4 @@
 pragma Singleton
-
 import Felgo 4.0
 import QtQuick 2.15
 
@@ -13,12 +12,14 @@ import QtQuick 2.15
  * - Calcul du nombre de colonnes par taille d'écran
  * - Espacement standardisé en 7 niveaux
  * - Calcul adaptatif de largeur de colonne
+ * - Détection d'appareil (NOUVEAU)
+ * - Détection d'orientation (NOUVEAU)
  */
 QtObject {
     id: root
 
     // ============================================
-    // BREAKPOINTS (seuils de largeur)
+    // SECTION 1: BREAKPOINTS (seuils de largeur)
     // ============================================
     readonly property QtObject breakpoints: QtObject {
         // Mobile petit (iPhone SE, vieux téléphones)
@@ -41,7 +42,7 @@ QtObject {
     }
 
     // ============================================
-    // CONFIGURATION GRILLE (nombre de colonnes)
+    // SECTION 2: CONFIGURATION GRILLE (nombre de colonnes)
     // ============================================
     readonly property QtObject gridConfig: QtObject {
         // Mobile : priorité à la lisibilité
@@ -57,8 +58,80 @@ QtObject {
         readonly property int desktopLargeColumns: 6
     }
 
+    // ════════════════════════════════════════════════════════
+    // SECTION 3: DEVICE INFO (NOUVEAU)
+    // ════════════════════════════════════════════════════════
+
+    /**
+     * SCREEN DIMENSIONS
+     *
+     * À binder depuis App.qml :
+     * ResponsiveConfig.screenWidth = Qt.binding(() => app.width)
+     * ResponsiveConfig.screenHeight = Qt.binding(() => app.height)
+     */
+    property real screenWidth: 1280
+    property real screenHeight: 720
+
+    /**
+     * Dimensions actuelles (raccourcis)
+     */
+    readonly property real currentWidth: screenWidth
+    readonly property real currentHeight: screenHeight
+
+    /**
+     * DEVICE INFO - Détection automatique d'appareil et orientation
+     *
+     * Propriétés réactives qui recalculent si dimensions changent
+     *
+     * Utilisation :
+     * - ResponsiveConfig.deviceInfo.isMobile
+     * - ResponsiveConfig.deviceInfo.isDesktop
+     * - ResponsiveConfig.deviceInfo.isPortrait
+     * - etc.
+     */
+    readonly property QtObject deviceInfo: QtObject {
+
+        // Orientation
+        readonly property bool isPortrait: root.screenHeight > root.screenWidth
+        readonly property bool isLandscape: root.screenHeight <= root.screenWidth
+
+        // Type d'appareil
+        readonly property bool isMobile: root.currentWidth < root.breakpoints.tabletPortrait
+        readonly property bool isTablet: root.currentWidth >= root.breakpoints.tabletPortrait &&
+                                          root.currentWidth < root.breakpoints.desktop
+        readonly property bool isDesktop: root.currentWidth >= root.breakpoints.desktop
+
+        // Labels pour logs/conditions
+        readonly property string deviceType:
+            root.deviceInfo.isMobile ? "mobile" :
+            root.deviceInfo.isTablet ? "tablet" :
+            "desktop"
+
+        // readonly property bool isMobileSmall: root.currentWidth < root.breakpoints.mobileNormal
+        // readonly property bool isMobileNormal: root.currentWidth >= root.breakpoints.mobileNormal &&
+        //                                        root.currentWidth < root.breakpoints.tabletPortrait
+        // readonly property bool isTabletPortrait: root.currentWidth >= root.breakpoints.tabletPortrait &&
+        //                                          root.currentWidth < root.breakpoints.tabletLandscape
+        // readonly property bool isTabletLandscape: root.currentWidth >= root.breakpoints.tabletLandscape &&
+        //                                           root.currentWidth < root.breakpoints.desktop
+        // readonly property bool isDesktop: root.currentWidth >= root.breakpoints.desktop &&
+        //                                   root.currentWidth < root.breakpoints.desktopLarge
+        // readonly property bool isDesktopLarge: root.currentWidth >= root.breakpoints.desktopLarge
+
+        // readonly property string deviceType:
+        //     root.deviceInfo.isMobileSmall ? "mobileSmall" :
+        //     root.deviceInfo.isMobileNormal ? "mobileNormal" :
+        //     root.deviceInfo.isTabletPortrait ? "tabletPortrait" :
+        //     root.deviceInfo.isTabletLandscape ? "tabletLandscape" :
+        //     root.deviceInfo.isDesktop ? "desktop" :
+        //     root.deviceInfo.isDesktopLarge ? "desktopLarge" :
+        //     "unknown"
+
+        readonly property string orientation: root.deviceInfo.isPortrait ? "portrait" : "landscape"
+    }
+
     // ============================================
-    // FONCTION : Nombre de colonnes optimal
+    // SECTION 4: FONCTIONS
     // ============================================
 
 
@@ -69,16 +142,20 @@ QtObject {
      * @return Nombre de colonnes optimal
      */
     function getColumnCount(width) {
-        if (width < root.breakpoints.tabletPortrait) {
-            return root.gridConfig.mobileNormalColumns
-        } else if (width < root.breakpoints.tabletLandscape) {
-            return root.gridConfig.tabletPortraitColumns
-        } else if (width < root.breakpoints.desktop) {
-            return root.gridConfig.tabletLandscapeColumns
-        } else if (width < root.breakpoints.desktopLarge) {
-            return root.gridConfig.desktopColumns
+        if (root.deviceInfo.isMobile) {
+            return root.gridConfig.mobileNormalColumns  // 2
+        } else if (root.deviceInfo.isTablet) {
+            if (width < root.breakpoints.tabletLandscape) {
+                return root.gridConfig.tabletPortraitColumns  // 3
+            } else {
+                return root.gridConfig.tabletLandscapeColumns  // 4
+            }
         } else {
-            return root.gridConfig.desktopLargeColumns
+            if (width < root.breakpoints.desktopLarge) {
+                return root.gridConfig.desktopColumns  // 5
+            } else {
+                return root.gridConfig.desktopLargeColumns  // 6
+            }
         }
     }
 
@@ -135,7 +212,7 @@ QtObject {
     }
 
     // ============================================
-    // ESPACEMENT (7 niveaux)
+    // SECTION 5: ESPACEMENT (7 niveaux)
     // ============================================
     readonly property QtObject spacing: QtObject {
         // Micro-espacement (bordures, traits fins)
@@ -162,40 +239,71 @@ QtObject {
 
         /**
         * Marge adaptative du conteneur selon taille écran
+        * Utilise deviceInfo et une valeur par défaut pour ne pas casser l'existant
         *
-         * Logique :
-         * - Mobile  (< 720px)   : sm = 8px
-         * - Tablet  (720-1280px): lg = 16px
-         * - Desktop (≥ 1280px)  : xl = 20px
+        * Logique :
+        * - Mobile  (< 720px)   : sm = 8px
+        * - Tablet  (720-1280px): lg = 16px
+        * - Desktop (≥ 1280px)  : xl = 20px
         */
-        function getContentMargin(availableWidth) {
+        function getContentMargin(availableWidth = -1) {
+            const width = availableWidth !== -1 ? availableWidth : root.currentWidth
 
-            if (availableWidth < root.breakpoints.tabletPortrait) {
-                return sm // Mobile
-            } else if (availableWidth < root.breakpoints.desktop) {
-                return lg // Tablet
+            if (width < root.breakpoints.tabletPortrait) {
+                return root.spacing.sm    // 8px - Mobile
+            } else if (width < root.breakpoints.desktop) {
+                return root.spacing.lg    // 16px - Tablet
             } else {
-                return xl // Desktop
+                return root.spacing.xl    // 20px - Desktop
             }
         }
 
 
         /**
-         * Espacement adaptatif entre items grille
-         *
-         * Logique :
-         * - Mobile  (< 720px)   : sm = 8px
-         * - Tablet  (720-1280px): md = 12px
-         * - Desktop (≥ 1280px)  : lg = 16px
+        * Espacement adaptatif entre items (grille, etc..)
+        * Utilise deviceInfo et une valeur par défaut pour ne pas casser l'existant
+        *
+        * Logique :
+        * - Mobile  (< 720px)   : sm = 8px
+        * - Tablet  (720-1280px): md = 12px
+        * - Desktop (≥ 1280px)  : lg = 16px
         */
-        function getItemSpacing(availableWidth) {
-            if (availableWidth < root.breakpoints.tabletPortrait) {
-                return sm // Mobile
-            } else if (availableWidth < root.breakpoints.desktop) {
-                return md // Tablet
+        function getItemSpacing(availableWidth = -1) {
+            const width = availableWidth !== -1 ? availableWidth : root.currentWidth
+
+            if (width < root.breakpoints.tabletPortrait) {
+                return root.spacing.sm    // 8px - Mobile
+            } else if (width < root.breakpoints.desktop) {
+                return root.spacing.md    // 12px - Tablet
             } else {
-                return lg // Desktop
+                return root.spacing.lg    // 16px - Desktop
             }
         }
+    }
+
+    // ============================================
+    // SECTION 5 : DEBUG & LOGS
+    // ============================================
+
+    /**
+    * Logs de debug (optionnel, désactivable)
+    */
+    property bool enableDebugLogs: true
+
+    function logDeviceInfo() {
+        if (!root.enableDebugLogs) return
+
+        console.log("\n======================================= ")
+        console.log("        RESPONSIVE CONFIG - DEBUG         ")
+        console.log("=========================================")
+        console.log("📏 Screen: " + root.currentWidth.toFixed(0) + "×" + root.currentHeight.toFixed(0) + " px")
+        console.log("📱 Device: " + root.deviceInfo.deviceType + " (" + root.deviceInfo.orientation + ")")
+        console.log("🎯 Columns: " + root.getColumnCount(root.currentWidth))
+        console.log("📐 Spacing: content=" + root.spacing.getContentMargin() + "px, items=" + root.spacing.getItemSpacing() + "px")
+        console.log("============================================\n")
+    }
+
+    Component.onCompleted: {
+        console.log("[ResponsiveConfig] Initialized - Singleton ready")
     }
 }
