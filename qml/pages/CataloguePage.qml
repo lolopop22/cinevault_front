@@ -2,57 +2,208 @@ import Felgo 4.0
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import Qt5Compat.GraphicalEffects
+import "../config" as Config
 import "../logic" as Logic
 import "../model" as Model
 import "../components" as Components
 import "../services" as Services
 
 
+/**
+ * CataloguePage - Grille responsive de films
+ */
 AppPage {
     id: cataloguePage
     title: "Mon Catalogue"
 
-    // Largeur fixe des cartes et espacement (ne changent plus avec la fenêtre)
-    readonly property real fixedCardWidth: dp(100)    // Largeur fixe des cartes
-    readonly property real itemSpacing: dp(0)         // Espacement fixe
+    // ════════════════════════════════════════════════════════
+    // SECTION 1 : CONSTANTES
+    // ════════════════════════════════════════════════════════
 
-    // Ratio d'affiche de cinéma (2:3) et hauteur pour le titre
-    readonly property real posterAspectRatio: 1.5  // Hauteur = largeur * 1.5 (ratio 2:3)
-    readonly property real titleHeight: dp(35)     // Espace réservé pour le titre
 
-    // Calcul dynamique du nombre de colonnes, ajoutant une colonne si possible
-    readonly property int columns: {
-        var availableWidth = width - dp(16)  // marge totale gauche/droite
-        var cardWithSpacing = fixedCardWidth + itemSpacing
-        var maxColumns = Math.floor(availableWidth / cardWithSpacing)
-        var leftover = availableWidth - (maxColumns * cardWithSpacing)
+    /**
+     * POSTER_ASPECT_RATIO
+     *
+     * Ratio cinématographique standard : 2:3
+     * Utilisé pour calculer la hauteur du poster selon sa largeur
+     *
+     * Valeur : 3/2 = 1.5
+     * Signification : hauteur = largeur × 1.5
+     *
+     * Exemple :
+     * - Largeur : 100px
+     * - Hauteur : 100 × 1.5 = 150px
+     */
+    readonly property real poster_aspect_ratio: 3 / 2
 
-        // Si espace restant suffisant pour une carte, ajoute une colonne
-        if (leftover >= fixedCardWidth) {
-            maxColumns = Math.min(maxColumns + 1, 4)  // limite max 4 colonnes
-        }
-        return Math.max(1, maxColumns)  // au moins 1 colonne
-    }
+    // ════════════════════════════════════════════════════════
+    // SECTION 2 : PROPRIÉTÉS RESPONSIVES (ResponsiveConfig)
+    // ════════════════════════════════════════════════════════
 
-    // Largeur totale de la grille (pour centrer si besoin)
-    readonly property real gridTotalWidth: (fixedCardWidth * columns) + (itemSpacing * (columns - 1))
 
-    // Calcul de la hauteur des cellules selon le ratio et titre
-    readonly property real cellHeight: (fixedCardWidth * posterAspectRatio) + titleHeight
+    /**
+     * COLONNES ADAPTATIF
+     * Détermine le nombre de colonnes selon la largeur disponible
+     *
+     * Breakpoints :
+     * - < 720px : 2 colonnes (mobile)
+     * - 720-1024px : 3 colonnes (tablet portrait)
+     * - 1024-1280px : 4 colonnes (tablet landscape)
+     * - ≥ 1280px : 5-6 colonnes (desktop)
+     *
+     * @return {int} Nombre de colonnes : 2-6
+     */
+    readonly property int columnCount: Config.ResponsiveConfig.getColumnCount(
+                                           width)
 
-    // Distance en pixels avant de charger image
-    // permet de déterminer l'espace tampon avan/après la zone visible du viewport de la GridView
-    property real visibilityThreshold: dp(50)   // configurable
 
-    // Propriété globale pour activer/désactiver lazy loading
+    /**
+     * ESPACEMENT ENTRE ITEMS
+     *
+     * Espacement horizontal et vertical entre les cartes
+     *
+     * Adaptation :
+     * - Mobile (< 720px) : 8px
+     * - Tablet (720-1280px) : 12px
+     * - Desktop (≥ 1280px) : 16px
+     *
+     * @return {real} Espacement en pixels
+     */
+    readonly property real itemSpacing: Config.ResponsiveConfig.spacing.getItemSpacing(
+                                            width)
+
+
+    /**
+     * MARGE DU CONTENEUR
+     *
+     * Espace entre la grille et les bords de la page
+     *
+     * Adaptation :
+     * - Mobile (< 720px) : 8px
+     * - Tablet (720-1280px) : 16px
+     * - Desktop (≥ 1280px) : 20px
+     *
+     * @return {real} Marge en pixels
+     */
+    readonly property real contentMargin: Config.ResponsiveConfig.spacing.getContentMargin(
+                                              width)
+
+
+    /**
+     * LARGEUR D'UNE COLONNE
+     *
+     * Calcule la largeur réelle d'une colonne
+     *
+     * Formule : (largeur disponible - espacements) / colonnes
+     *
+     * Exemple (Desktop 1280px, 5 colonnes, 16px spacing) :
+     * - Largeur disponible : 1280 - 40 = 1240px
+     * - Total espacement : (5-1) × 16 = 64px
+     * - Largeur colonne : (1240 - 64) / 5 = 235.2px
+     *
+     * @return {real} Largeur d'une colonne en pixels
+     */
+    readonly property real columnWidth: Config.ResponsiveConfig.calculateColumnWidth(
+                                            width - (2 * contentMargin),
+                                            columnCount, itemSpacing)
+
+
+    /**
+     * HAUTEUR D'UNE CELLULE
+     *
+     * Hauteur totale (poster + titre)
+     *
+     * Calcul :
+     * - Hauteur poster : largeur × POSTER_ASPECT_RATIO
+     * - Hauteur titre : espacement pour 2 lignes
+     * - Total : poster_height + 40px
+     *
+     * @return {real} Hauteur cellule en pixels
+     */
+    readonly property real cellHeight: (columnWidth * poster_aspect_ratio) + dp(
+                                           40)
+
+
+    /**
+     * GRID TOTAL WIDTH
+     *
+     * Calcule la largeur TOTALE que prend la grille
+     * (colonnes + espacements entre colonnes)
+     *
+     * Formule :
+     * - Colonnes : columnWidth × columnCount
+     * - Spacing entre colonnes : (columnCount - 1) × itemSpacing
+     * - Total = colonnes + spacing
+     *
+     * Exemple (3 colonnes, 240px, 12px spacing) :
+     * - Colonnes : 240 × 3 = 720px
+     * - Spacing : 2 × 12 = 24px
+     * - Total : 720 + 24 = 744px  Pas fullwidth !
+     */
+    readonly property real gridTotalWidth: (columnWidth * columnCount) + (columnCount * itemSpacing)
+
+
+    /**
+     * VISIBILITÉ THRESHOLD (Lazy loading)
+     *
+     * Buffer de pixels avant/après la zone visible
+     * pour charger les images anticipativement
+     * (permet de déterminer l'espace tampon avant/après
+     * la zone visible du viewport de la GridView afin de charger
+     * l'image)
+     *
+     * Impact :
+     * - Petit (0px) : images chargées au dernier moment
+     * - Moyen (50px) : préchargement modéré
+     * - Grand (100px) : préchargement agressif
+     *
+     * Recommandation : 50px (équilibre perf/UX)
+     */
+    property real visibilityThreshold: dp(50)
+
+
+    /**
+     * ENABLE LAZY LOADING GLOBAL
+     *
+     * Active/désactive le chargement lazy des images
+     * pour optimiser la performance sur gros catalogues
+     */
     property bool enableLazyLoadingGlobal: true
 
-    // === LOGIQUE MÉTIER INTÉGRÉE (chargement, erreur, comptage) ===
-    Logic.CatalogueLogic{
+    // ════════════════════════════════════════════════════════
+    // SECTION 3 : SERVICES (LOGIQUE MÉTIER)
+    // ════════════════════════════════════════════════════════
+
+
+    /**
+     * CATALOGUE LOGIC
+     *
+     * Gère :
+     * - Chargement des films
+     * - Gestion d'erreurs
+     * - État (loading, hasData, errorMessage)
+     */
+    Logic.CatalogueLogic {
         id: logic
     }
 
-    // === HEADER FIXE ===
+    // ════════════════════════════════════════════════════════
+    // SECTION 4 : HEADER FIXE
+    // ════════════════════════════════════════════════════════
+
+
+    /**
+     * HEADER FIXE
+     *
+     * Affiche le titre et le nombre de films
+     * Reste visible en haut pendant le scroll
+     *
+     * Responsabilités :
+     * - Affichage du titre
+     * - Comptage des films
+     * - Messages d'erreur
+     * - Ombre de profondeur
+     */
     Rectangle {
         id: fixedHeader
 
@@ -60,9 +211,8 @@ AppPage {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.topMargin: dp(5)
-        anchors.leftMargin: dp(20)
-        anchors.rightMargin: dp(20)
+        anchors.margins: dp(contentMargin)
+        anchors.topMargin: dp(Config.ResponsiveConfig.spacing.md)
 
         height: dp(60)
         radius: dp(8)
@@ -73,7 +223,7 @@ AppPage {
         layer.enabled: true
         layer.effect: DropShadow {
             horizontalOffset: 0
-            verticalOffset: dp(5)
+            verticalOffset: dp(4)
             radius: dp(4)
             samples: 9
             color: Qt.rgba(0, 0, 0, 0.1)
@@ -82,22 +232,28 @@ AppPage {
         // Texte qui affiche le nombre de films ou l’erreur
         AppText {
             anchors.centerIn: parent
-            text: logic.errorMessage
-                  ? "Mon Catalogue – Erreur"
-                  : logic.hasData
-                    ? "Mon Catalogue – " + logic.filmCount + " films"
-                    : "Mon Catalogue – Aucun film"
+            text: logic.errorMessage ? "Mon Catalogue – Erreur" : logic.hasData ? "Mon Catalogue – " + logic.filmCount + " films" : "Mon Catalogue – Aucun film"
             font.pixelSize: sp(16)
             font.bold: true
             color: Theme.colors.textColor
         }
     }
 
-    // === INDICATEUR DE CHARGEMENT ===
+    // ════════════════════════════════════════════════════════
+    // SECTION 5 : INDICATEUR DE CHARGEMENT
+    // ════════════════════════════════════════════════════════
+
+
+    /**
+     * LOADING INDICATOR
+     *
+     * Affiche pendant le chargement du catalogue
+     * Visible seulement si logic.loading = true
+     */
     Column {
         anchors.centerIn: parent
         spacing: dp(10)
-        visible: logic.loading  // ← Visible seulement pendant le chargement
+        visible: logic.loading // ← Visible seulement pendant le chargement
 
         BusyIndicator {
             anchors.horizontalCenter: parent.horizontalCenter
@@ -114,49 +270,124 @@ AppPage {
         }
     }
 
-    // === GRILLE DE FILMS AVEC CLIPPING===
-    // GridView avec margin top pour éviter le header
+    // ════════════════════════════════════════════════════════
+    // SECTION 6 : GRILLE DE FILMS (RESPONSIVE)
+    // ════════════════════════════════════════════════════════
+
+
+    /**
+     * GRIDVIEW RESPONSIVE DANS UN CONTENEUR
+     *
+     * Adaptation dynamique :
+     * - Colonnes : 2-6 selon largeur
+     * - Espacement : 8-16px selon largeur
+     * - Largeur colonne : calculée auto
+     *
+     * Optimisations :
+     * - Lazy loading des images
+     * - Visibility tracking pour économiser CPU
+     * - Smooth transitions
+     */
     Item {
         id: gridContainer
-        clip: true                                   // Cache tout ce qui sort des limites
 
         anchors.top: fixedHeader.bottom
-        anchors.topMargin: dp(5)                     // Marge pour éviter le header
-        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.margins: dp(contentMargin)
 
-        width: gridTotalWidth
-        height: parent.height - fixedHeader.height - dp(0)
+        clip: true
 
+        // Pour le debug du centrage
+        // Rectangle {
+        //     anchors.fill: parent
+        //     color: "transparent"
+        //     border.color: "red"
+        //     border.width: 2
+        // }
+
+        // ════════════════════════════════════════════════════════
+        // GRIDVIEW CENTRÉE À L'INTÉRIEUR DU CONTENEUR
+        // ════════════════════════════════════════════════════════
         GridView {
             id: filmGridView
-            anchors.fill: parent
 
-            // CellWidth/Height fixes
-            cellWidth: fixedCardWidth              // Cartes largeur fixe
-            cellHeight: cataloguePage.cellHeight   // Hauteur calculée
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
 
-            model: Model.FilmDataSingletonModel && Model.FilmDataSingletonModel.films ? Model.FilmDataSingletonModel.films : []
+            width: gridTotalWidth
+
+            // ════════════════════════════════════════════════════════
+            // DIMENSIONS RESPONSIVE
+            // ════════════════════════════════════════════════════════
+
+            // clip: true  // Cache tout ce qui sort des limites
+
+
+            /**
+                * CELL WIDTH - Largeur colonne adaptée
+                *
+                * Calcul responsif :
+                * - Largeur disponible : width - 2×contentMargin
+                * - Divisée par nombre de colonnes
+                * - Moins les espacements entre colonnes
+                *
+                * Formule dans ResponsiveConfig :
+                * (width - totalSpacing) / columnCount
+                */
+            cellWidth: columnWidth + itemSpacing
+
+
+            /**
+                * CELL HEIGHT - Hauteur de cellule
+                *
+                * Adaptée à la largeur (respecte aspect ratio)
+                *
+                * Calcul :
+                * - Hauteur poster : largeur × 1.5
+                * - Espace titre : 40px
+                * - Total : columnWidth × 1.5 + 40
+                */
+            cellHeight: cataloguePage.cellHeight
+
+            model: Model.FilmDataSingletonModel
+                   && Model.FilmDataSingletonModel.films ? Model.FilmDataSingletonModel.films : []
 
             // Visibilité conditionnelle : visible seulement si pas en chargement ET qu'il y a des films
-            visible: !logic.loading && Model.FilmDataSingletonModel.films.length > 0
+            visible: !logic.loading
+                     && Model.FilmDataSingletonModel.films.length > 0
 
-            // Propriétés pour lazy loading
+            // ════════════════════════════════════════════════════════
+            // PROPRIÉTÉS LAZY LOADING
+            // ════════════════════════════════════════════════════════
             property real itemHeight: cellHeight
             property real viewportTop: contentY
             property real viewportBottom: contentY + height
 
-            // A décommenter lorsqu'on aura de gros volume de films à afficher
+
+            /**
+                * CACHE BUFFER
+                *
+                * À décommenter pour gros catalogues (1000+ films)
+                * Optimise la performance en cachant/réutilisant les items
+                */
             // cacheBuffer: cellHeight * 2
             // reuseItems: true
 
             // Opacité réduite pendant le chargement, mais visible
             // opacity: logic.loading ? 0.5 : 1.0
 
-            // Timer pour optimiser les calculs de visibilité
-            // Permet d'éviter les calculs excessifs pendant scroll
+
+            /**
+                * TIMER OPTIMISATION DES CALCULS DE VISIBILITÉ
+                *
+                * Évite les recalculs constants (et excessifs) lors du scroll
+                * Throttle : 100ms entre recalculs
+                */
             Timer {
                 id: visibilityUpdateTimer
-                interval: 100  // 100ms de délai
+                interval: 100
                 repeat: false
                 onTriggered: {
                     // Force la mise à jour des bindings de visibilité
@@ -165,48 +396,120 @@ AppPage {
                 }
             }
 
+
+            /**
+                * DELEGATE - Carte film
+                *
+                * Rendu pour chaque film du modèle
+                *
+                * Responsabilités :
+                * - Affichage poster (lazy loading)
+                * - Affichage titre
+                * - Navigation
+                * - Feedback visuel (hover, press)
+                */
             delegate: Rectangle {
                 id: filmCard
-                width: fixedCardWidth  // Largeur dynamique
-                height: cataloguePage.cellHeight - dp(4) // Petite marge interne
-                radius: dp(6)
-                color: Theme.colors.backgroundColor
-                border.color: Theme.colors.dividerColor
-                border.width: dp(0.5)
 
-                // Calcul de visibilité de cet item
+                width: columnWidth
+                height: cataloguePage.cellHeight - dp(4)
+
+                // ════════════════════════════════════════════════════════
+                // STYLE AMÉLIORÉ
+                // ════════════════════════════════════════════════════════
+
+                // radius: dp(8)
+                // color: Theme.colors.backgroundColor
+                // border.color: Theme.colors.dividerColor
+                // border.width: dp(0.5)
+
+
+                /**
+                     * RADIUS - Coins arrondis
+                     *
+                     * ✅ AUGMENTÉ : 8 → 12px
+                     * Donne un aspect plus moderne et doux
+                     */
+                radius: dp(12)
+
+                color: Theme.colors.backgroundColor
+
+
+                /**
+                     * BORDER - Bordure visible et élégante
+                     *
+                     * AMÉLIORÉ :
+                     * - width : 0.5 → 1.0px (plus visible)
+                     * - color : couleur cohérente
+                     */
+                border.width: dp(1)
+                border.color: "#e5e7eb" // Gris clair pour délimitation douce
+
+
+                /**
+                     * SHADOW - Ombre profonde et prononcée
+                     *
+                     * - Verticale : 4 → 6px (plus de profondeur)
+                     * - Radius : 4 → 12px (blur plus important)
+                     * - Samples : augmenté pour qualité
+                     * - Opacité : 0.1 → 0.15 (plus visible)
+                     *
+                     * Donne de la profondeur et de la dimension
+                     */
+                layer.enabled: true
+                layer.effect: DropShadow {
+                    horizontalOffset: 0
+                    verticalOffset: dp(6)
+                    radius: dp(12)
+                    samples: 17
+                    color: Qt.rgba(0, 0, 0, 0.15)
+                    spread: dp(0)
+                }
+
+                // ════════════════════════════════════════════════════════
+                // VISIBILITY TRACKING (Lazy loading)
+                // ════════════════════════════════════════════════════════
                 property real itemTop: y
                 property real itemBottom: y + height
                 property real threshold: cataloguePage.visibilityThreshold
 
-                // Calcul de visibilité optimisé
+
+                /**
+                     * ITEM VISIBLE
+                     *
+                     * Détermine si l'item est dans la zone visible
+                     * avec buffer de visibilityThreshold pixels
+                     *
+                     * Calcul :
+                     * - Item visible si :
+                     *   (itemBottom >= vpTop - threshold) AND
+                     *   (itemTop <= vpBottom + threshold)
+                     */
                 property bool itemVisible: {
                     var top = y
                     var bottom = y + height
                     var vpTop = filmGridView.viewportTop
                     var vpBottom = filmGridView.viewportBottom
 
-                    var visible = (bottom >= vpTop - threshold) && (top <= vpBottom + threshold)
-
-                    // Debug moins verbeux
-                    if (visible !== itemVisible) {
-                        console.log("👁️", modelData ? modelData.title : "Item", visible ? "visible" : "caché")
-                    }
-
-                    return visible
+                    return (bottom >= vpTop - threshold)
+                            && (top <= vpBottom + threshold)
                 }
 
+                property real padding: dp(6)
 
-                property real padding: dp(3)
+                // ════════════════════════════════════════════════════════
+                // FEEDBACK VISUEL (Press effect)
+
 
                 /**
-                 *Effet visuel au clic
-                 * Feedback visuel lors du press :
-                 * - Opacité réduite à 70% (convention mobile)
-                 * - Scale réduit à 97% (effet de "press" subtil)
-                 * - Animation 100ms (instantané pour l'utilisateur)
-                 * - Easing OutQuad (décélération naturelle)
-                 */
+                     *Effet visuel au clic
+                     * Feedback visuel lors du press :
+                     * - Opacité réduite à 70% (convention mobile)
+                     * - Scale réduit à 97% (effet de "press" subtil)
+                     * - Animation 100ms (instantané pour l'utilisateur)
+                     * - Easing OutQuad (décélération naturelle)
+                     */
+                // ════════════════════════════════════════════════════════
                 property bool isPressed: false
 
                 scale: isPressed ? 0.95 : 1.0
@@ -216,13 +519,16 @@ AppPage {
                 // TRANSITIONS POUR LE FEEDBACK VISUEL
                 // ============================================
 
+
                 /**
-                 * Transition d'opacité
-                 *
-                 * Propriétés :
-                 * - duration: 100ms (imperceptible comme "lag", perçu comme instantané)
-                 * - easing: InOutQuad (accélération puis décélération douce)
-                 */
+                     * TRANSITION OPACITY
+                     *
+                     * Animation fluide de l'opacité
+                     *
+                     * Paramètres :
+                     * - duration: 100ms (imperceptible, perçu comme instantané)
+                     * - easing: InOutQuad (accélération/décélération douce)
+                     */
                 Behavior on opacity {
                     NumberAnimation {
                         duration: 100
@@ -230,13 +536,16 @@ AppPage {
                     }
                 }
 
+
                 /**
-                 * Transition de scale
-                 *
-                 * Propriétés :
-                 * - duration: 100ms (synchronisé avec opacity)
-                 * - easing: OutQuad (décélération douce, plus naturelle)
-                 */
+                     * TRANSITION SCALE
+                     *
+                     * Animation fluide de l'échelle
+                     *
+                     * Paramètres :
+                     * - duration: 100ms (synchronisé avec opacity)
+                     * - easing: OutQuad (décélération naturelle)
+                     */
                 Behavior on scale {
                     NumberAnimation {
                         duration: 100
@@ -244,47 +553,47 @@ AppPage {
                     }
                 }
 
-                // ============================================
-                // ZONE CLIQUABLE POUR LA NAVIGATION
-                // ============================================
+                // ════════════════════════════════════════════════════════
+                // ZONE INTERACTIVE (MouseArea)
+                // ════════════════════════════════════════════════════════
 
-                // MouseArea pour rendre toute la carte cliquable
 
+                /**
+                     * MOUSE AREA
+                     *
+                     * Rend la carte cliquable
+                     * Gère la navigation vers FilmDetailPage
+                     */
                 MouseArea {
                     id: filmCardMouseArea
                     anchors.fill: parent
-
-                    // Curseur en forme de main pour indiquer que c'est cliquable (desktop)
                     cursorShape: Qt.PointingHandCursor
 
-                    // Gestionnaire de clic - Navigation vers FilmDetailPage
                     onClicked: {
                         console.log("=== NAVIGATION VERS DÉTAILS ===")
-                        console.log("🖱️  Clic sur film:", modelData ? modelData.title : "Inconnu")
-                        console.log("🆔 ID du film:", modelData ? modelData.id : -1)
+                        console.log("🖱️  Clic sur film:",
+                                    modelData ? modelData.title : "Inconnu")
+                        console.log("🆔 ID du film:",
+                                    modelData ? modelData.id : -1)
 
-                        // Validation des données avant navigation
                         if (!modelData || !modelData.id || modelData.id <= 0) {
-                            console.error("❌ Données film invalides (modelData est null ou ID de film invalide) - navigation annulée")
+                            console.error(
+                                        "❌ Données film invalides - navigation annulée")
                             Services.ToastService.showError("Film invalide")
                             return
                         }
 
-                        // Navigation vers la page de détails
-                        // navigationStack : propriété automatique fournie par NavigationStack
-                        // push(component, properties) : empile une nouvelle page avec propriétés
-                        console.log("🚀 Push vers FilmDetailPage avec filmId:", modelData.id)
+                        console.log("🚀 Push vers FilmDetailPage avec filmId:",
+                                    modelData.id)
 
                         navigationStack.push(filmDetailPageComponent, {
-                            filmId: modelData.id
-                        })
+                                                 "filmId": modelData.id
+                                             })
 
-                        console.log("✅ Navigation déclenchée")
-                        console.log(" ")
+                        console.log("✅ Navigation déclenchée\n")
                     }
 
                     onPressed: {
-                        console.log("👇 Press sur:", modelData ? modelData.title : "?")
                         filmCard.isPressed = true
                     }
 
@@ -297,35 +606,60 @@ AppPage {
                     }
                 }
 
+                // ════════════════════════════════════════════════════════
+                // CONTENU : POSTER + TITRE
+                // ════════════════════════════════════════════════════════
                 Column {
                     id: cardContainer
                     anchors.fill: parent
-                    anchors.margins: parent.padding
-                    spacing: dp(4)
+                    anchors.margins: filmCard.padding
+                    spacing: dp(10)
 
-                    // Zone affiche avec largeur FIXE
+
+                    /**
+                          * POSTER IMAGE
+                          *
+                          * Affichage du poster avec :
+                          * - Ratio cinéma 2:3
+                          * - Lazy loading optionnel
+                          * - Visibility tracking
+                          */
                     Components.PosterImage {
                         width: parent.width
-                        height: parent.width * posterAspectRatio // Respect du ratio cinéma et utilisation de la largeur fixe
+
+                        // Respect du ratio cinéma et utilisation de la largeur fixe
+                        height: width * poster_aspect_ratio
+
                         source: modelData ? modelData.poster_url : ""
 
                         // Configuration lazy loading (activé pour test)
                         enableLazyLoading: cataloguePage.enableLazyLoadingGlobal
-                        isVisible: parent.parent.itemVisible  // Référence au delegate
+                        isVisible: filmCard.itemVisible // Référence au delegate
                         visibilityThreshold: cataloguePage.visibilityThreshold
 
-                        // Debug pour voir le comportement
                         onIsVisibleChanged: {
-                            console.log("📱 Item", index, "visible:", isVisible, "- Source:", source.split('/').pop())
+                            console.log("📱 Film", index, "visible:",
+                                        isVisible, "- Poster:",
+                                        source.split('/').pop())
                         }
                     }
 
-                    // Zone titre (fixe)
+
+                    /**
+                          * TITRE FILM
+                          *
+                          * Affichage du titre
+                          *
+                          * Caractéristiques :
+                          * - Ellipsis après 2 lignes
+                          * - Texte centré
+                          * - Alignement vertical
+                          */
                     AppText {
                         width: parent.width
-                        height: titleHeight - dp(8)
-                        text: modelData ? modelData.title : sp("?")
-                        font.pixelSize: sp(9)
+
+                        text: modelData ? modelData.title : "?"
+                        font.pixelSize: sp(10)
                         font.bold: true
                         color: Theme.colors.textColor
                         horizontalAlignment: Text.AlignHCenter
@@ -334,44 +668,15 @@ AppPage {
                         maximumLineCount: 2
                         elide: Text.ElideRight
                     }
-
-                    // // ============================================
-                    // // TRANSITIONS POUR LE FEEDBACK VISUEL
-                    // // ============================================
-
-                    // /**
-                    //  * Transition d'opacité
-                    //  *
-                    //  * Propriétés :
-                    //  * - duration: 100ms (imperceptible comme "lag", perçu comme instantané)
-                    //  * - easing: InOutQuad (accélération puis décélération douce)
-                    //  */
-                    // Behavior on opacity {
-                    //     NumberAnimation {
-                    //         duration: 100
-                    //         easing.type: Easing.InOutQuad
-                    //     }
-                    // }
-
-                    // /**
-                    //  * Transition de scale
-                    //  *
-                    //  * Propriétés :
-                    //  * - duration: 100ms (synchronisé avec opacity)
-                    //  * - easing: OutQuad (décélération douce, plus naturelle)
-                    //  */
-                    // Behavior on scale {
-                    //     NumberAnimation {
-                    //         duration: 100
-                    //         easing.type: Easing.OutQuad
-                    //     }
-                    // }
                 }
             }
 
+            // ════════════════════════════════════════════════════════
+            // SIGNAUX & OPTIMISATIONS
             // Mettre à jour viewportTop et viewportBottom sur scroll
             // Mise à jour de la visibilité lors du scroll
             // Optimisation du scroll
+            // ════════════════════════════════════════════════════════
             onContentYChanged: {
                 visibilityUpdateTimer.restart()
             }
@@ -381,44 +686,101 @@ AppPage {
         }
     }
 
-    // ============================================
-    // COMPOSANT DE PAGE DE DÉTAILS (lazy loading)
-    // ============================================
+    // ════════════════════════════════════════════════════════
+    // SECTION 7 : COMPOSANT LAZY - FILM DETAIL PAGE
+    // ════════════════════════════════════════════════════════
+
 
     /**
-     * Component pour la page de détails
+     * FILM DETAIL PAGE COMPONENT
+     *
      * Pattern de lazy instantiation (lazy loading)
-     * La page n'est créée qu'au moment du push, économisant mémoire et temps de chargement
+     * La page est créée seulement au moment du push
+     * Économise mémoire et temps de chargement
      */
     Component {
         id: filmDetailPageComponent
-        FilmDetailPage {
-            // La page sera créée dynamiquement avec les propriétés passées lors du push (filmId)
+        FilmDetailPage {// La page sera créée dynamiquement avec les propriétés passées lors du push (filmId)
         }
     }
 
-    // === GESTION DES SIGNAUX ===
+    // ════════════════════════════════════════════════════════
+    // SECTION 8 : GESTION DES SIGNAUX
+    // ════════════════════════════════════════════════════════
+
+
+    /**
+     * ERROR HANDLER
+     *
+     * Gère les erreurs du logic
+     */
     Connections {
         target: logic
         function onErrorOccurred(message) {
-            console.log("⚠️ Erreur reçue dans la vue CataloguePage:", message)
+            console.log("⚠️ Erreur reçue dans CataloguePage:", message)
             Services.ToastService.showError(message)
         }
     }
 
+    // ════════════════════════════════════════════════════════
+    // SECTION 9 : DEBUG & LOGS
+    // ════════════════════════════════════════════════════════
+
+
+    /**
+     * LOGS DE DÉMARRAGE
+     *
+     * Affiche les paramètres responsive calculés
+     * Utile pour debug sur différentes résolutions
+     */
     Component.onCompleted: {
-        console.log("=== DEBUG CataloguePage avec cartes fixes ===")
-        console.log("Colonnes:", columns)
-        console.log("Largeur carte fixe:", fixedCardWidth)
-        console.log("Largeur grille totale:", gridTotalWidth)
-        console.log("Largeur écran:", width)
-        console.log("Espace restant:", (width - gridTotalWidth - dp(32)))
-        console.log("filmDataModel:", Model.FilmDataSingletonModel)
-        if (Model.FilmDataSingletonModel) {
-            console.log("filmDataModel.films:", Model.FilmDataSingletonModel.films)
-            if (Model.FilmDataSingletonModel.films) {
-                console.log("films.length:", Model.FilmDataSingletonModel.films.length)
+        console.log("\n=== DEBUG CataloguePage [INITIAL] ===")
+        console.log("⚠️ Note: width peut être 0 au démarrage (normal)")
+        console.log("   Les bindings réactifs se mettront à jour après layout")
+        console.log("")
+        console.log("📏 Dimensions initiales:")
+        console.log("   Largeur page:", width, "px")
+        console.log("   (Width sera calculé après layout)")
+        console.log("")
+
+        // Démarrer timer pour logger après layout
+        logTimer.start()
+    }
+
+
+    /**
+     * TIMER POUR LOGS POST-LAYOUT
+     *
+     * Attend 100ms pour logger APRÈS que width soit calculé
+     */
+    Timer {
+        id: logTimer
+        interval: 100
+        running: false
+        repeat: false
+        onTriggered: {
+            console.log("\n=== DEBUG CataloguePage [APRÈS LAYOUT] ===")
+            console.log("📏 Dimensions:")
+            console.log("   Largeur page:",
+                        cataloguePage.width.toFixed(0), "px")
+            console.log("   Marge contenu:", contentMargin, "px")
+            console.log("")
+            console.log("🎯 Responsive Config:")
+            console.log("   Colonnes:", columnCount)
+            console.log("   Espacement items:", itemSpacing, "px")
+            console.log("   Largeur colonne:", columnWidth.toFixed(1), "px")
+            console.log("   Hauteur cellule:", cellHeight.toFixed(1), "px")
+            console.log("   gridTotalWidth:", gridTotalWidth.toFixed(1), "px")
+            console.log("")
+            console.log("📊 Données:")
+            console.log("   Films model:",
+                        Model.FilmDataSingletonModel ? "✅ Chargé" : "❌ Non chargé")
+            if (Model.FilmDataSingletonModel
+                    && Model.FilmDataSingletonModel.films) {
+                console.log("   Nombre films:",
+                            Model.FilmDataSingletonModel.films.length)
             }
+            console.log("==========================================\n")
         }
     }
 }
