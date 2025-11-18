@@ -36,6 +36,13 @@ AppPage {
      */
      readonly property real poster_aspect_ratio: 3 / 2
 
+     /**
+     * MAX_COLUMN_WIDTH
+     * Largeur maximale d'une colonne (empêche cartes trop larges sur desktop)
+     */
+     readonly property real max_column_width: 500
+
+
      // ════════════════════════════════════════════════════════
      // SECTION 2 : PROPRIÉTÉS RESPONSIVES (ResponsiveConfig)
      // ════════════════════════════════════════════════════════
@@ -92,7 +99,7 @@ AppPage {
      /**
      * LARGEUR D'UNE COLONNE
      *
-     * Calcule la largeur réelle d'une colonne
+     * Calcule la largeur réelle d'une colonne avec limite de largeur
      *
      * Formule : (largeur disponible - espacements) / colonnes
      *
@@ -103,9 +110,13 @@ AppPage {
      *
      * @return {real} Largeur d'une colonne en pixels
      */
-     readonly property real columnWidth: Config.ResponsiveConfig.calculateColumnWidth(
+     // readonly property real columnWidth: Config.ResponsiveConfig.calculateColumnWidth(
+     //                                          width - (2 * contentMargin),
+     //                                          columnCount, itemSpacing)
+     readonly property real columnWidth: Config.ResponsiveConfig.calculateColumnWidthWithMax(
                                               width - (2 * contentMargin),
-                                              columnCount, itemSpacing)
+                                              columnCount, itemSpacing, max_column_width)
+
 
 
      /**
@@ -120,8 +131,7 @@ AppPage {
      *
      * @return {real} Hauteur cellule en pixels
      */
-     readonly property real cellHeight: (columnWidth * poster_aspect_ratio) + dp(
-                                             40)
+     readonly property real cellHeight: columnWidth * poster_aspect_ratio + 40
 
 
      /**
@@ -159,7 +169,7 @@ AppPage {
      *
      * Recommandation : 50px (équilibre perf/UX)
      */
-     property real visibilityThreshold: dp(50)
+     property real visibilityThreshold: 50
 
 
      /**
@@ -300,12 +310,12 @@ AppPage {
           clip: true
 
           // Pour le debug du centrage
-          // Rectangle {
-          //     anchors.fill: parent
-          //     color: "transparent"
-          //     border.color: "red"
-          //     border.width: 2
-          // }
+          Rectangle {
+              anchors.fill: parent
+              color: "transparent"
+              border.color: "red"
+              border.width: 2
+          }
 
           // ════════════════════════════════════════════════════════
           // GRIDVIEW CENTRÉE À L'INTÉRIEUR DU CONTENEUR
@@ -313,8 +323,11 @@ AppPage {
           GridView {
                id: filmGridView
 
+               // anchors.fill: parent
                anchors.top: parent.top
                anchors.bottom: parent.bottom
+               anchors.horizontalCenter: parent.horizontalCenter
+               // anchors.margins: dp(contentMargin)
 
                width: dp(gridTotalWidth)
 

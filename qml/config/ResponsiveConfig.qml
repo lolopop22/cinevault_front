@@ -211,6 +211,28 @@ QtObject {
         return finalWidth
     }
 
+    /**
+     * Calcul de largeur de colonne avec limite max
+     *
+     * Assure que columnWidth ne dépasse jamais maxColumnWidth
+     *
+     * @param containerWidth - Largeur totale disponible
+     * @param columnCount - Nombre de colonnes
+     * @param itemSpacing - Espacement entre items
+     * @param maxWidth - Largeur maximale (limite)
+     * @return Largeur colonne adaptée (max = maxWidth)
+     *
+     * Exemple :
+     * - Desktop 1920px, 5 colonnes, 16px spacing, max=300px
+     * - Sans limit : (1920 - 40) / 5 = 376px (KO)
+     * - Avec limit : Math.min(376, 300) = 300px (OK)
+     */
+    function calculateColumnWidthWithMax(containerWidth, columnCount, itemSpacing, maxWidth) {
+        const standardWidth = root.calculateColumnWidth(containerWidth, columnCount, itemSpacing)
+        return Math.min(standardWidth, maxWidth)
+    }
+
+
     // ============================================
     // SECTION 5: ESPACEMENT (7 niveaux)
     // ============================================
